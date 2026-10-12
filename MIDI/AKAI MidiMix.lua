@@ -20,7 +20,7 @@
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
 
-  Features (details in midimix-reaper-spec.md):
+  Features:
     * a bank of 8 tracks, Bank Left / Bank Right buttons
     * faders = track volume, master fader = master volume
     * bottom knob row = pan, middle row = width (stereo pan), top row = sends

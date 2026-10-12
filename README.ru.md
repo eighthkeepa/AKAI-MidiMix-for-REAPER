@@ -10,7 +10,6 @@ Akai MidiMix как контроллер REAPER. Один Lua-скрипт, бе
 | `midimix/` | Модули скрипта (settings, device, tracks, instrument, input, gui, highlight). Должны лежать рядом с `AKAI MidiMix.lua` |
 | `AKAI MidiMix probe.lua` | Проверка устройства: какие ноты и CC шлёт MidiMix, горят ли диоды |
 | `midimix_config.lua` | Твои настройки. Создаёшь сам, необязательно |
-| `PROGRESS.md` | Что сделано, что проверено, дорожная карта |
 
 ## Установка
 
@@ -144,7 +143,11 @@ return {
 
 ## Дальше
 
-Bypass отдельных плагинов через learn, вторая версия панели «инструмента». Подробно в `PROGRESS.md`, список проверок в `CHECKLISTS.md`.
+Bypass отдельных плагинов через learn, вторая версия панели «инструмента».
+
+## Авторы
+
+Автор идеи, тестов на железе и решений: The Eighth. Основная часть кода написана вместе с [Claude](https://claude.ai) (Anthropic).
 
 ## Устройство кода и ReaPack
 
