@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1">
+<index version="1" name="MidiMix" commit="5eed3b53c18c90955053c9168c36ad253915b29d">
+  <category name="MIDI">
+    <reapack name="midimix_probe.lua" type="script" desc="MidiMix probe">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Checks which notes and CCs the Akai MidiMix sends and lights its LEDs one by one.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.1" author="The Eighth" time="2026-10-12T18:47:32Z">
+        <changelog><![CDATA[0.1: first version]]></changelog>
+        <source main="main">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix_probe.lua</source>
+      </version>
+    </reapack>
+    <reapack name="midimix_reaper.lua" type="script" desc="MidiMix for REAPER">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Akai MidiMix as a full REAPER controller in one ReaScript (no ReaLearn, OSC or extensions): banks, faders, pan, width, sends, mute/solo/rec, LEDs, instrument mode, a ReaImGui window. The window needs ReaImGui (optional).\par}
+}
+]]></description>
+        <link rel="website" href="https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER">GitHub</link>
+      </metadata>
+      <version name="0.19" author="The Eighth" time="2026-10-12T18:47:32Z">
+        <changelog><![CDATA[0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/]]></changelog>
+        <source main="main">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix_reaper.lua</source>
+        <source file="midimix/device.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/device.lua</source>
+        <source file="midimix/gui.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/gui.lua</source>
+        <source file="midimix/highlight.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/highlight.lua</source>
+        <source file="midimix/input.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/input.lua</source>
+        <source file="midimix/instrument.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/instrument.lua</source>
+        <source file="midimix/settings.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/settings.lua</source>
+        <source file="midimix/tracks.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5eed3b53c18c90955053c9168c36ad253915b29d/MIDI/midimix/tracks.lua</source>
+      </version>
+    </reapack>
+  </category>
   <metadata>
     <link rel="website" href="https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER">website</link>
   </metadata>
