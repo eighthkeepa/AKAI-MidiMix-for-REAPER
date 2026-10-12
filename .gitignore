@@ -1,0 +1,16 @@
+# your own settings and files the script writes
+midimix_config.lua
+midimix_log.txt
+midimix_tracks.txt
+midimix_probe_log.txt
+
+# tests / python
+__pycache__/
+*.pyc
+
+# packaging and OS
+*.zip
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
