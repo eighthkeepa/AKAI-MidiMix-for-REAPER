@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- Copyright (c) 2026 The Eighth
 -- MidiMix module: Window (ReaImGui). Loaded by midimix_reaper.lua into a shared environment.
 -- Top-level names here are shared between modules (the 'local' keyword is dropped on purpose).
 

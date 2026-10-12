@@ -33,6 +33,8 @@
 
   Your own settings: put a midimix_config.lua file next to this script. It must
   return a table, for example:   return { bank_size = 6, highlight = "none" }
+
+  Copyright (c) 2026 The Eighth. Licensed under the GNU GPL v3 or later (see LICENSE).
 ]]
 
 -- Shared environment: all modules see the same names (CFG, S, helpers).

@@ -171,4 +171,5 @@ OSCII-bot `MidiMixControl.txt` (goldenarpharazon, Carnelian) + `MidiMix.ReaperOS
 - Скрипт разделён на модули в `midimix/` (settings, device, tracks, instrument, input, gui, highlight). Главный файл только загружает их и держит цикл. Общее окружение: на верхнем уровне модулей нет `local`, поэтому нет лимита в 200 локальных переменных.
 - Добавлены теги ReaPack в шапку `midimix_reaper.lua` и `midimix_probe.lua`. Репозиторий и `index.xml` ещё не созданы.
 
-- Добавлены README.md (English), README.ru.md, LICENSE (MIT), .gitignore.
+- Добавлены README.md (English), README.ru.md, LICENSE, .gitignore.
+- Лицензия изменена с MIT на GPL-3.0-or-later (LICENSE, шапки файлов, README).
