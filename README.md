@@ -109,4 +109,4 @@ Modules share one environment (`CFG`, `S` and the helper functions), so a new fe
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+GPL-3.0-or-later, see [LICENSE](LICENSE).

@@ -23,6 +23,8 @@
     Send All (коротко, потом подержать пару секунд),
     по одной ручке из каждого ряда у полосы 1 и 8, фейдер 1, фейдер 8, мастер-фейдер.
   Потом отправь мне файл midimix_probe_log.txt.
+
+  Copyright (c) 2026 The Eighth. Licensed under the GNU GPL v3 or later (see LICENSE).
 ]]
 
 local R = reaper

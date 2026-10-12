@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- Copyright (c) 2026 The Eighth
 -- MidiMix module: Bank highlight: markers, colours, mixer follow. Loaded by midimix_reaper.lua into a shared environment.
 -- Top-level names here are shared between modules (the 'local' keyword is dropped on purpose).
 
