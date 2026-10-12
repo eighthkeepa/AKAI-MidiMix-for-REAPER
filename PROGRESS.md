@@ -173,3 +173,4 @@ OSCII-bot `MidiMixControl.txt` (goldenarpharazon, Carnelian) + `MidiMix.ReaperOS
 
 - Добавлены README.md (English), README.ru.md, LICENSE, .gitignore.
 - Лицензия изменена с MIT на GPL-3.0-or-later (LICENSE, шапки файлов, README).
+- Файлы скрипта лежат в папке MIDI/ (категория ReaPack). reapack-index не индексирует файлы из корня репозитория.

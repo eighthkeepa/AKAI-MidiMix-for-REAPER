@@ -42,7 +42,7 @@ Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaL
 
 ## Installation
 
-1. Options > Show REAPER resource path in explorer/finder > `Scripts`. Copy `midimix_reaper.lua` and the `midimix/` folder there, side by side.
+1. Options > Show REAPER resource path in explorer/finder > `Scripts`. Copy the contents of the `MIDI/` folder of this repository there: `midimix_reaper.lua` and the `midimix/` folder side by side.
 2. Preferences > MIDI Devices: enable input and output for the MIDI Mix. "Enable input for control messages" is not needed.
 3. Tracks that record from "All MIDI inputs" will receive the MIDI Mix notes. Change their input.
 4. Actions > Show action list > New action > Load ReaScript > `midimix_reaper.lua` > Run. Add it to a toolbar for an on/off button.
@@ -91,9 +91,9 @@ All options and defaults are at the top of `midimix/settings.lua`. Values saved 
 ## Project layout
 
 ```
-midimix_reaper.lua   entry point: loads the modules and runs the loop
-midimix/             settings, device, tracks, instrument, input, gui, highlight
-midimix_probe.lua    hardware probe
+MIDI/midimix_reaper.lua   entry point: loads the modules and runs the loop
+MIDI/midimix/             settings, device, tracks, instrument, input, gui, highlight
+MIDI/midimix_probe.lua    hardware probe
 tests/               mock REAPER and automated checks (python3 -I tests/run.py, needs lupa)
 ```
 

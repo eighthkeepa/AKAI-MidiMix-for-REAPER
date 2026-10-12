@@ -27,7 +27,7 @@ local function setup(opts)
   _G.reaper = R
   for i = 1, (opts.tracks or 10) do st.add_track("T" .. i) end
   if opts.before then opts.before(st) end
-  dofile("midimix_reaper.lua")
+  dofile("MIDI/midimix_reaper.lua")
   st.run(1.4)  -- the start-up LED circle takes ~1.1 s
   return st
 end
