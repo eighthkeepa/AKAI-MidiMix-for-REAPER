@@ -110,6 +110,10 @@ Modules share one environment (`CFG`, `S` and the helper functions), so a new fe
 - The LEDs show the send number for up to 16 sends per track (Rec LEDs 1..8, then blinking for 9..16). Sends above 16 still work, they are just not shown on the controller.
 - Learned knobs (instrument mode) use pickup as well. Turn the knob slowly and carefully past the parameter's current value; if the parameter was changed somewhere else, the knob has to catch it again.
 
+## Credits
+
+Designed and tested by The Eighth. Most of the code was written with [Claude](https://claude.ai) (Anthropic).
+
 ## License
 
 GPL-3.0-or-later, see [LICENSE](LICENSE).
