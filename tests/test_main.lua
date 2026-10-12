@@ -1,4 +1,4 @@
--- Проверка логики midimix_reaper.lua на макете REAPER.
+-- Проверка логики AKAI MidiMix.lua на макете REAPER.
 -- Запуск: python3 tests/run.py  (из папки проекта)
 
 local mock = dofile("tests/mock_reaper.lua")
@@ -21,13 +21,13 @@ local function setup(opts)
     local f = io.open(dir .. "/midimix_config.lua", "w")
     f:write(opts.cfg)
     f:close()
-    opts.script_path = dir .. "/midimix_reaper.lua"
+    opts.script_path = dir .. "/AKAI MidiMix.lua"
   end
   local R, st = mock.new(opts)
   _G.reaper = R
   for i = 1, (opts.tracks or 10) do st.add_track("T" .. i) end
   if opts.before then opts.before(st) end
-  dofile("MIDI/midimix_reaper.lua")
+  dofile("MIDI/AKAI MidiMix.lua")
   st.run(1.4)  -- the start-up LED circle takes ~1.1 s
   return st
 end
@@ -752,6 +752,55 @@ test("окно: заголовок цвета Akai Red, стили снимаю�
   for _, c in ipairs(st.gui_push or {}) do if c == 0xBC012EFF then red = true end end
   check(red, "заголовок активного окна красный (Akai Red)")
   check(#(st.gui_push or {}) > 0 and #(st.gui_push or {}) == (st.gui_pop or 0), "стили заголовка снимаются (" .. #(st.gui_push or {}) .. "/" .. tostring(st.gui_pop) .. ")")
+end)
+
+test("мастер: Bank Right + Mute / Solo / нижняя ручка", function()
+  local st = setup({ tracks = 12 })
+  local m = _G.reaper.GetMasterTrack(0)
+  st.note_on(BR); st.run(0.06)
+  st.note_on(MUTE[3]); st.run(0.06); st.note_off(MUTE[3]); st.run(0.06)
+  check(m.B_MUTE == 1, "Bank Right + Mute: мастер заглушён")
+  check((st.tracks[3].B_MUTE or 0) == 0, "дорожка 3 не тронута")
+  st.note_on(SOLO); st.run(0.06); st.note_off(SOLO); st.run(0.06)
+  check(m.I_SOLO and m.I_SOLO ~= 0, "Bank Right + Solo: мастер в соло")
+  check((st.tracks[1].I_SOLO or 0) == 0, "соло банка не сработало")
+  st.cc(BOT[2], 64); st.run(0.1); st.cc(BOT[2], 127); st.run(0.1)
+  check(near(m.D_PAN or 0, 1, 0.01), "нижняя ручка двигает pan мастера")
+  check(near(st.tracks[2].D_PAN or 0, 0), "pan дорожки 2 не двигался")
+  st.note_off(BR); st.run(0.2)
+  check(st.mixer_scroll == nil, "после мастер-слоя Bank Right не листает банк")
+  st.note_on(MUTE[3]); st.run(0.06); st.note_off(MUTE[3]); st.run(0.06)
+  check(st.tracks[3].B_MUTE == 1, "без Bank Right Mute снова трогает дорожку")
+  check(m.B_MUTE == 1, "а мастер не изменился")
+  -- после слоя обычный pan требует нового подхвата, дорожка не прыгает
+  local p0 = st.tracks[2].D_PAN or 0
+  st.cc(BOT[2], 127); st.run(0.1)
+  check(near(st.tracks[2].D_PAN or 0, p0, 0.01), "pan дорожки не прыгнул после мастер-слоя")
+  -- на паузе слой выключен
+  no_errors(st)
+end)
+
+test("двойное нажатие Solo возвращает соло банка как было", function()
+  local st = setup({ tracks = 12 })
+  st.tracks[2].I_SOLO = 2                      -- одна дорожка уже в соло
+  st.note_on(SOLO); st.run(0.05); st.note_off(SOLO); st.run(0.1)
+  check(st.tracks[1].I_SOLO ~= 0 and st.tracks[5].I_SOLO ~= 0, "первое нажатие включило соло банка")
+  st.note_on(SOLO); st.run(0.05); st.note_off(SOLO); st.run(0.2)
+  check(st.tracks[2].I_SOLO == 2, "соло трека 2 вернулось")
+  for i = 1, 8 do if i ~= 2 then check((st.tracks[i].I_SOLO or 0) == 0, "соло трека " .. i .. " выключено") end end
+  no_errors(st)
+end)
+
+test("настройки: свёрнутая группа показывает «restart needed»", function()
+  local st = setup({ gui = true, tracks = 4 })
+  st.gui_set = { ["Tracks in a bank##bank_size"] = 4 }
+  st.run(0.4)
+  st.gui_header_titles = {}
+  st.run(0.4)
+  local found = false
+  for _, t in ipairs(st.gui_header_titles) do if tostring(t):find("restart needed", 1, true) then found = true end end
+  check(found, "заголовок группы помечен, даже если группа свёрнута")
+  no_errors(st)
 end)
 
 test("тип дорожки: вручную по клику, separator по высоте, VCA в старших группах", function()

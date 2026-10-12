@@ -1,7 +1,7 @@
 -- @noindex
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2026 The Eighth
--- MidiMix module: MIDI input: buttons, knobs, faders, LEDs. Loaded by midimix_reaper.lua into a shared environment.
+-- MidiMix module: MIDI input: buttons, knobs, faders, LEDs. Loaded by AKAI MidiMix.lua into a shared environment.
 -- Top-level names here are shared between modules (the 'local' keyword is dropped on purpose).
 
 
@@ -46,6 +46,10 @@ function on_note(note, down, now)
   end
 
   if b.kind == "mute" then
+    if down and master_layer() then            -- Bank Right held: master mute
+      master_mute_toggle(); master_touch()
+      return
+    end
     if down then
       local tr = S.strips[b.strip]
       if tr then
@@ -85,15 +89,21 @@ function on_note(note, down, now)
   elseif b.kind == "solo" then
     if down then
       S.solo_held, S.solo_used = true, false
+      if master_layer() then                   -- Bank Right held: master solo
+        master_solo_toggle(); master_touch()
+        S.solo_used = true
+      end
     else
       S.solo_held = false
       if not S.solo_used then
-        bank_solo_toggle()
-        if CFG.rec_modes and now - S.solo_tap_t <= CFG.double_tap_s then
-          -- second tap: the first tap's bank solo is undone by this one, and the Rec row changes mode
-          S.solo_tap_t = -100
+        if CFG.rec_modes and S.solo_snap and now - S.solo_tap_t <= CFG.double_tap_s then
+          -- second tap: put the bank's solo state back exactly as it was, and change the Rec row mode
+          solo_restore(S.solo_snap)
+          S.solo_snap, S.solo_tap_t = nil, -100
           set_rec_mode(S.rec_mode % #REC_MODES + 1, now)
         else
+          S.solo_snap = solo_snapshot()
+          bank_solo_toggle()
           S.solo_tap_t = now
         end
       end
@@ -112,7 +122,11 @@ function on_note(note, down, now)
       end
     else
       S.bank_down[d] = false
-      if not S.bank_used[d] then bank_page(d) end
+      if d == 1 then master_layer_release() end
+      if not S.bank_used[d] then
+        -- held long enough = first / last bank, short press = one bank
+        if now - S.bank_t[d] >= CFG.bank_hold_s then bank_jump(d) else bank_page(d) end
+      end
     end
   end
 end
@@ -168,6 +182,11 @@ function on_cc(cc, val, now)
   S.phys[cc] = val
   if not S.enabled then return end
   if c.strip and c.strip > CFG.bank_size then return end
+
+  if c.kind == "bot" and master_layer() then   -- Bank Right held: bottom knob = master pan
+    c = { kind = "mpan", strip = c.strip }
+    master_touch()
+  end
 
   if S.mode == "instrument" and (c.kind == "top" or c.kind == "mid" or c.kind == "bot") then
     local bk = c.kind .. c.strip

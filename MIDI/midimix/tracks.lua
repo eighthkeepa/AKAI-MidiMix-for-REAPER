@@ -1,7 +1,7 @@
 -- @noindex
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2026 The Eighth
--- MidiMix module: Adapters, banks, track types, rebuild, spacers, bank actions. Loaded by midimix_reaper.lua into a shared environment.
+-- MidiMix module: Adapters, banks, track types, rebuild, spacers, bank actions. Loaded by AKAI MidiMix.lua into a shared environment.
 -- Top-level names here are shared between modules (the 'local' keyword is dropped on purpose).
 
 ---------------------------------------------------------------------------
@@ -22,6 +22,8 @@ A.bot = { -- pan
     set_pan(tr, n * 2 - 1)
   end,
 }
+A.mpan = A.bot   -- master pan (bottom knob while Bank Right is held)
+
 -- width is audible only in stereo pan (I_PANMODE 5); in dual pan D_WIDTH is the right-channel pan
 function width_active(tr)
   return not CFG.width_needs_stereo_pan or info(tr, "I_PANMODE") == 5
@@ -53,7 +55,7 @@ A.top = { -- send
 }
 
 function track_for(c)
-  if c.kind == "master" then return R.GetMasterTrack(0) end
+  if c.kind == "master" or c.kind == "mpan" then return R.GetMasterTrack(0) end
   if c.kind == "fxbind" then return c.b.tr end
   return S.strips[c.strip]
 end
@@ -366,6 +368,36 @@ function bank_solo_toggle()
   each_strip(function(tr) any = true; if info(tr, "I_SOLO") == 0 then all = false end end)
   if not any then return end
   each_strip(function(tr) set_solo(tr, not all) end)
+end
+
+-- Master layer: hold Bank Right (mixer mode) and use Mute = master mute, Solo = master solo,
+-- any bottom knob = master pan.
+function master_layer() return S.enabled and S.mode == "mixer" and S.bank_down[1] end
+function master_touch() S.bank_used[1] = true; S.master_touched = true end
+function master_mute_toggle()
+  local tr = R.GetMasterTrack(0)
+  if tr then set_mute(tr, info(tr, "B_MUTE") == 0) end
+end
+function master_solo_toggle()
+  local tr = R.GetMasterTrack(0)
+  if tr then set_solo(tr, info(tr, "I_SOLO") == 0) end
+end
+function master_layer_release()
+  if not S.master_touched then return end
+  S.master_touched = false
+  for i = 1, 8 do S.picked["bot" .. i] = nil; S.picked["mpan" .. i] = nil end   -- the knobs moved: pick up again
+end
+
+-- Solo tap saves the solo state of the bank so that a double tap can put it back exactly
+function solo_snapshot()
+  local snap = {}
+  each_strip(function(tr) snap[#snap + 1] = { tr, info(tr, "I_SOLO") } end)
+  return snap
+end
+function solo_restore(snap)
+  for _, e in ipairs(snap or {}) do
+    if not R.ValidatePtr2 or R.ValidatePtr2(0, e[1], "MediaTrack*") then set_info(e[1], "I_SOLO", e[2]) end
+  end
 end
 
 function bank_rec_toggle()
