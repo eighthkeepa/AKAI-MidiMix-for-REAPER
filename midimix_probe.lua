@@ -1,10 +1,10 @@
---[[
-  @description MidiMix probe
-  @version 0.1
-  @author The Eighth
-  @about Checks which notes and CCs the Akai MidiMix sends and lights its LEDs one by one.
-  @changelog 0.1: first version
+-- @description MidiMix probe
+-- @version 0.1
+-- @author The Eighth
+-- @about Checks which notes and CCs the Akai MidiMix sends and lights its LEDs one by one.
+-- @changelog 0.1: first version
 
+--[[
   MidiMix — пробный скрипт (разведка). Версия 0.1
 
   Что делает:
