@@ -191,6 +191,11 @@ function M.new(opts)
             if name == "ImGui_GetCursorScreenPos" then return 100, 100 end
             if name == "ImGui_CalcTextSize" then return 6 * #tostring(select(2, ...) or ""), 13 end
             if name == "ImGui_GetWindowDrawList" then return "drawlist" end
+            if name == "ImGui_DrawList_AddRectFilled" then
+              local a = { ... }
+              st.gui_rects = st.gui_rects or {}
+              st.gui_rects[#st.gui_rects + 1] = { x1 = a[2], y1 = a[3], x2 = a[4], y2 = a[5] }
+            end
             if name == "ImGui_DrawList_AddText" then
               st.gui_texts = st.gui_texts or {}
               st.gui_texts[#st.gui_texts + 1] = select(5, ...)

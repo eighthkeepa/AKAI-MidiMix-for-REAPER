@@ -4,13 +4,13 @@ English | [Русский](README.ru.md)
 
 Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaLearn, OSC, CSI or C++ extension. LEDs follow REAPER, and an optional ReaImGui window shows what the controller is doing.
 
-> Status: beta (v0.19). Tested against a mock REAPER (327 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
+> Status: beta (v0.20). Tested against a mock REAPER (334 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
 
 ## Features
 
 **Mixing**
 - Bank of up to 8 tracks (configurable). Bank Left / Bank Right move by a bank; hold for the first / last bank; Solo + Bank moves by one track.
-- Faders = track volume (top = +6 dB, configurable). Master fader = master volume.
+- Faders = track volume (top = +12 dB, configurable). Master fader = master volume.
 - Knobs: bottom row = pan, middle row = stereo width, top row = sends. Soft takeover (pickup) on every knob and fader, so tracks never jump.
 - Per-track Mute, Solo (hold Solo + Mute), Rec arm. Solo tap = solo the whole bank. Solo + any Rec = rec arm the whole bank.
 - Sends: the knob follows the send shown in the window. Hold Rec + tap Send All to switch to the next send of one track. Sends can be matched by destination name.
@@ -32,7 +32,7 @@ Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaL
 - Pause / resume and on/off from the controller (Send All).
 - Settings screen with saved values and a config file, plus a debug log.
 
-**Window** (needs ReaImGui, optional): a mixer view in the style of the Akai MPC mixer. Every strip shows track colour, selection, type icon, pan, width, send, a fader scale with stereo level meters and peak hold (after the fader), dB readout, M / S / R buttons, folder bands. Tabs: Mixer, Instrument, Settings.
+**Window** (needs ReaImGui, optional): a mixer view in the style of the Akai MPC mixer. Every strip shows track colour, selection, type icon, pan, width, send, a fader scale with stereo level meters and peak hold (after the fader and pan), dB readout, M / S / R buttons, folder bands. A MASTER strip shows the master fader. Tabs: Mixer, Instrument, Settings.
 
 ## Requirements
 

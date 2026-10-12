@@ -15,7 +15,7 @@ st.push(0x90, 1, 127, 0); st.run(0.1)         -- чужое устройство
 for i = 1, 20 do st.cc(30 + i, i) end st.run(0.1)
 st.exit()
 local text = table.concat(st.console)
-for _, key in ipairs({ "НОТА ВКЛ", "НОТА ВЫКЛ", "фейдер 1", "чужое", "ДАМП", "mute 1", "probe остановлен" }) do
-  print(key, text:find(key, 1, true) and "ok" or "НЕТ")
+for _, key in ipairs({ "NOTE ON", "NOTE OFF", "fader 1", "(other)", "DUMP", "mute 1", "probe stopped" }) do
+  print(key, text:find(key, 1, true) and "ok" or "MISSING")
 end
-print("ошибки:", text:find("ошибка", 1, true) and "ЕСТЬ" or "нет")
+print("ошибки:", text:find("error: ", 1, true) and "YES" or "none")

@@ -1,6 +1,6 @@
 # MidiMix → REAPER (Lua): прогресс и дорожная карта
 
-Обновлено: 2026-10-11. Версия скрипта: **0.18**. Это единственный файл, который нужно прочитать, чтобы продолжить работу в новом чате.
+Обновлено: 2026-10-11. Версия скрипта: **0.20**. Это единственный файл, который нужно прочитать, чтобы продолжить работу в новом чате.
 
 ## 1. Цель
 
@@ -40,7 +40,7 @@
 ### Управление
 | Что | Как |
 |---|---|
-| Громкость | Фейдеры (верх = +6 дБ), мастер-фейдер |
+| Громкость | Фейдеры (верх = +12 дБ), мастер-фейдер |
 | Pan | Нижний ряд ручек |
 | Ширина | Средний ряд (слышна только в stereo pan) |
 | Посылы | Верхний ряд ручек |
@@ -80,7 +80,7 @@
 - Кириллица в именах работает.
 
 ### Настройки по умолчанию (в начале `midimix_reaper.lua`)
-`device_match="midi%s*mix"`, `midi_channel=0`, `bank_size=8`, `mixer_visible_only=true`, `pickup_window=3`, `center_snap=2`, `fader_max_db=6`, `solo_value=2`, `scroll_mixer=true`, `spacers=true`, `sends_by_name=false`, `page_flash_s=1.2`, `blink_hz=2`, `led_refresh_s=5`, `window=true`, `track_sends=true`, `global_sends=false`, `startup_anim=true`, `startup_step_s=0.07`, `exit_blink=true`, `exit_blink_s=0.18`, `bank_blink_base_hz=1`, `bank_blink_step_hz=1`, `bank_blink_max_hz=8`, `solo_leds_on_mute=false`, `debug=false` (пишет `midimix_log.txt` в папку ресурсов REAPER), `send_all_note=nil`, `burst_min=20`, `burst_window=0.15`, `double_tap_s=0.5`, а также таблица `map` с номерами выше (включая `solo_strip`).
+`device_match="midi%s*mix"`, `midi_channel=0`, `bank_size=8`, `mixer_visible_only=true`, `pickup_window=3`, `center_snap=2`, `fader_max_db=12`, `solo_value=2`, `scroll_mixer=true`, `spacers=true`, `sends_by_name=false`, `page_flash_s=1.2`, `blink_hz=2`, `led_refresh_s=5`, `window=true`, `track_sends=true`, `global_sends=false`, `startup_anim=true`, `startup_step_s=0.07`, `exit_blink=true`, `exit_blink_s=0.18`, `bank_blink_base_hz=1`, `bank_blink_step_hz=1`, `bank_blink_max_hz=8`, `solo_leds_on_mute=false`, `debug=false` (пишет `midimix_log.txt` в папку ресурсов REAPER), `send_all_note=nil`, `burst_min=20`, `burst_window=0.15`, `double_tap_s=0.5`, а также таблица `map` с номерами выше (включая `solo_strip`).
 
 ## 5. Статус проверки на устройстве
 
@@ -174,3 +174,31 @@ OSCII-bot `MidiMixControl.txt` (goldenarpharazon, Carnelian) + `MidiMix.ReaperOS
 - Добавлены README.md (English), README.ru.md, LICENSE, .gitignore.
 - Лицензия изменена с MIT на GPL-3.0-or-later (LICENSE, шапки файлов, README).
 - Файлы скрипта лежат в папке MIDI/ (категория ReaPack). reapack-index не индексирует файлы из корня репозитория.
+
+## Публикация (с 0.19)
+- Репозиторий: https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER, ветка main, лицензия GPL-3.0-or-later, автор в шапках «The Eighth».
+- ReaPack: индекс `https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/main/index.xml`. Скрипты лежат в `MIDI/` (reapack-index не индексирует корень), модули в `MIDI/midimix/` помечены `@noindex`, перечислены в `@provides` главного файла.
+- Выпуск новой версии: поднять `@version` и `@changelog` в `MIDI/midimix_reaper.lua`, `git add -A`, `git commit`, `reapack-index --scan`, `git add index.xml`, `git commit`, `git push`. На Mac reapack-index стоит с `--user-install`, нужен `export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"`.
+- Работа в песочнице: файлы в `MIDI/`, тесты `python3 -I tests/run.py` из корня (327 проверок). Песочница временная: свежий zip надо загружать в файлы Проекта.
+
+## Следующие шаги
+1. Проверить 0.19 на устройстве: вид окна (рамки, метры после фейдера), режим инструмента, подсветка, VCA/bus.
+2. Bypass отдельных плагинов (через learn).
+3. Вторая версия панели инструмента.
+4. Перевод midimix_probe.lua на английский (по желанию).
+
+### 0.20 (2026-10-12)
+- Фейдер по умолчанию до **+12 дБ** (`fader_max_db = 12`; это потолок и в REAPER, и на устройстве). Сохранённое из окна значение остаётся, Reset to defaults даёт 12.
+- Окно: колонка **MASTER** справа от полос (мастер-фейдер, стерео-метры, дБ, кнопка M). Общий код фейдера вынесен в `draw_fader_area`.
+- Шкала фейдера строится по `fader_max_db` (`fader_ticks`: +12, +9, +6, +3, 0, -3, -9, -20, -30, лишние подписи не рисуются, если они ближе 13 px).
+- Метры учитывают панораму (`meter_after_pan`, по умолчанию вкл, есть в Settings): дальний канал тише по закону баланса. Если окажется, что `Track_GetPeakInfo` уже включает панораму, опцию выключить.
+- `midimix_probe.lua` переведён на английский (v0.2).
+- `CHECKLISTS.md`: список проверок на устройстве.
+- Тесты: 334, 0 провалов (новые: мастер, шкала +12 и +6, метры и панорама).
+- Проверка README от ChatGPT (`README_human.md`, `README.ru_human.md`): правок мало и в основном косметика, часть формулировок стала канцелярской («работает не так, как ожидается»), старые ошибки остались (путь к настройкам, `config.lua`, «вашего»). Не принято, README правим сами.
+
+## Следующие шаги (актуально)
+1. Пройти `CHECKLISTS.md` на устройстве и прислать, что не так.
+2. Bypass отдельных плагинов (через learn).
+3. Вторая версия панели инструмента.
+4. Переписать README по-человечески самим (коротко, с инструкцией по установке через ReaPack).
