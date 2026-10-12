@@ -18,6 +18,8 @@ CFG = {
   bank_hold_s = 0.5,           -- hold Bank Left / Right this long = jump to the first / last bank
   pickup_window = 3,           -- pickup: tolerance in steps 0..127
   center_snap = 2,             -- pan and width: snap to center, steps 0..127
+  width_needs_stereo_pan = true, -- the width knob only works on tracks whose pan mode is "stereo pan" (otherwise width does nothing audible)
+  allow_panmode_change = false,  -- true: Solo + middle knob and both Bank buttons switch tracks to stereo pan (changes the project!)
   fader_max_db = 12,           -- top of the fader, dB (REAPER and the MIDI Mix go up to +12)
   solo_value = 2,              -- value written to I_SOLO: 1 = solo, 2 = solo in place
   highlight = "spacers",       -- how the bank is shown in the track list / mixer:
@@ -138,6 +140,10 @@ SCHEMA = {
     tip = "0 = no tolerance. Bigger = easier to pick up a value, steps 0..127" },
   { key = "center_snap", label = "Pan centre snap", kind = "int", min = 0, max = 10, live = true },
   { key = "fader_max_db", label = "Fader top, dB", kind = "float", min = 0, max = 12, live = true },
+  { key = "width_needs_stereo_pan", label = "Width knob only on tracks in stereo pan mode", kind = "bool", live = true,
+    tip = "On: the width knob ignores tracks in other pan modes (width would be inaudible there)" },
+  { key = "allow_panmode_change", label = "Allow switching tracks to stereo pan from the device", kind = "bool", live = true,
+    tip = "Off (default): the script never changes a track's pan mode. On: Solo + middle knob and both Bank buttons set stereo pan." },
   { group = "Sends" },
   { key = "track_sends", label = "Rec N + Send All = next send of one track", kind = "bool", live = true },
   { key = "global_sends", label = "Send All tap = next send of ALL tracks", kind = "bool", live = true },

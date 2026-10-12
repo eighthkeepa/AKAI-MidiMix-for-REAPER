@@ -188,6 +188,12 @@ function M.new(opts)
               if v ~= nil then return true, v end
               return false, (select(3, ...))
             end
+            if name == "ImGui_CollapsingHeader" then st.gui_headers = (st.gui_headers or 0) + 1; return true end
+            if name == "ImGui_PushStyleColor" then
+              st.gui_push = st.gui_push or {}
+              st.gui_push[#st.gui_push + 1] = select(3, ...)
+            end
+            if name == "ImGui_PopStyleColor" then st.gui_pop = (st.gui_pop or 0) + (select(2, ...) or 1) end
             if name == "ImGui_GetCursorScreenPos" then return 100, 100 end
             if name == "ImGui_CalcTextSize" then return 6 * #tostring(select(2, ...) or ""), 13 end
             if name == "ImGui_GetWindowDrawList" then return "drawlist" end

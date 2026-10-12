@@ -22,8 +22,13 @@ A.bot = { -- pan
     set_pan(tr, n * 2 - 1)
   end,
 }
-A.mid = { -- width (audible only in stereo pan; the mode is not checked: for tracks on the "default" mode I_PANMODE may return a different number)
+-- width is audible only in stereo pan (I_PANMODE 5); in dual pan D_WIDTH is the right-channel pan
+function width_active(tr)
+  return not CFG.width_needs_stereo_pan or info(tr, "I_PANMODE") == 5
+end
+A.mid = { -- width
   get = function(tr)
+    if not width_active(tr) then return nil end
     return (info(tr, "D_WIDTH") + 1) / 2
   end,
   set = function(tr, n)
@@ -374,7 +379,15 @@ function clear_all_solo()
   for i = 0, R.CountTracks(0) - 1 do set_info(R.GetTrack(0, i), "I_SOLO", 0) end
 end
 
+function panmode_change_off()
+  if not S.panmode_hint then
+    S.panmode_hint = true
+    say("switching tracks to stereo pan is off (Settings: 'Allow switching tracks to stereo pan from the device')")
+  end
+end
+
 function bank_stereo_pan()
+  if not CFG.allow_panmode_change then panmode_change_off(); return end
   each_strip(function(tr) set_info(tr, "I_PANMODE", 5) end)
   reset_picks()
 end
