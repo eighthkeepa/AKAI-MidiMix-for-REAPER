@@ -14,7 +14,7 @@ Akai MidiMix как контроллер REAPER. Один Lua-скрипт, бе
 
 ## Установка
 
-1. REAPER → Опции → Показать папку ресурсов REAPER → папка `Scripts`. Положи туда все файлы вместе с папкой `midimix/`.
+1. REAPER → Опции → Показать папку ресурсов REAPER → папка `Scripts`. Положи туда содержимое папки `MIDI/`: `midimix_reaper.lua` и папку `midimix/` рядом.
 2. Настройки → MIDI устройства. У MidiMix включи **Enable input** и **Enable output** (без output не горят диоды). «Enable input for control messages» не нужен.
 3. Если у какого-то трека вход «All MIDI inputs», он будет получать ноты с MidiMix. Поменяй таким трекам вход.
 4. Для окна: ReaPack → Browse packages → **ReaImGui**. Без него всё работает, просто без окна.
