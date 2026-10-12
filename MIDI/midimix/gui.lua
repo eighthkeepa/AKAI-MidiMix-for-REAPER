@@ -37,6 +37,7 @@ end
 C = {
   panel = 0x24262BFF, strip = 0x30323AFF, header = 0x23252AFF, sep = 0x08090BFF, bar_bg = 0x15161AFF,
   text = 0xE8E9ECFF, dim = 0x8C919BFF,
+  akai = 0xBC012EFF, akai_dim = 0x7A0120FF,   -- Akai Red (#BC012E) for the window title bar
   vol = 0x3FB6A8FF, pan = 0x6C8EF5FF, wid = 0xB07CF0FF, send = 0xF0A13DFF,
   m_on = 0xE8A33DFF, s_on = 0x4CBF6BFF, r_on = 0xE5484DFF, flag_off = 0x30333AFF,
   ok = 0x4CBF6BFF, paused = 0xE8A33DFF, bad = 0xE5484DFF,
@@ -300,8 +301,12 @@ function draw_strip(dl, x, y, i, tr)
   local pan = info(tr, "D_PAN")
   local ptxt = math.abs(pan) < 0.005 and "C" or string.format("%s%d", pan < 0 and "L" or "R", math.floor(math.abs(pan) * 100 + 0.5))
   bar(y + 53, 14, (pan + 1) / 2, C.pan, ptxt, true)
-  local width = info(tr, "D_WIDTH")
-  bar(y + 70, 12, (width + 1) / 2, C.wid, string.format("width %d", math.floor(width * 100 + 0.5)), true)
+  if width_active(tr) then
+    local width = info(tr, "D_WIDTH")
+    bar(y + 70, 12, (width + 1) / 2, C.wid, string.format("width %d", math.floor(width * 100 + 0.5)), true)
+  else
+    bar(y + 70, 12, 0.5, C.flag_off, "width n/a")
+  end
 
   -- send
   local nsend = R.GetTrackNumSends(tr, 0)
@@ -451,10 +456,16 @@ function draw_settings()
   R.ImGui_Dummy(ctx, width, 1)
   local need_restart = false
   for _, item in ipairs(SCHEMA) do
+    if item.key and not item.live and SHOWN[item.key] ~= CFG[item.key] then need_restart = true end
+  end
+  local section_open, first_group = true, true
+  for _, item in ipairs(SCHEMA) do
     if item.group then
-      R.ImGui_Spacing(ctx)
-      R.ImGui_TextColored(ctx, C.dim, item.group)
-    else
+      -- every group is a collapsible header (the first one starts open), so the tab stays short
+      local fl = (first_group and R.ImGui_TreeNodeFlags_DefaultOpen) and R.ImGui_TreeNodeFlags_DefaultOpen() or 0
+      first_group = false
+      section_open = R.ImGui_CollapsingHeader(ctx, item.group, fl) and true or false
+    elseif section_open then
       local v, changed, nv = SHOWN[item.key], false, nil
       local id = item.label .. "##" .. item.key
       if item.kind == "bool" then
@@ -478,7 +489,6 @@ function draw_settings()
       if not item.live then
         R.ImGui_SameLine(ctx)
         local pending = SHOWN[item.key] ~= CFG[item.key]
-        if pending then need_restart = true end
         R.ImGui_TextColored(ctx, pending and C.paused or C.dim, pending and "restart the script to apply" or "(needs restart)")
       end
     end
@@ -547,6 +557,17 @@ function draw_gui()
     ctx = R.ImGui_CreateContext("MidiMix")
   end
   local wflags = R.ImGui_WindowFlags_AlwaysAutoResize and R.ImGui_WindowFlags_AlwaysAutoResize() or 0
+  if R.ImGui_WindowFlags_NoDocking then wflags = wflags | (R.ImGui_WindowFlags_NoDocking() or 0) end   -- never snap into REAPER's docker
+  local pushed = 0                                       -- title bar in Akai Red
+  if R.ImGui_PushStyleColor then
+    for _, nm in ipairs({ "TitleBg", "TitleBgActive", "TitleBgCollapsed" }) do
+      local col_fn = R["ImGui_Col_" .. nm]
+      if col_fn then
+        R.ImGui_PushStyleColor(ctx, col_fn(), nm == "TitleBgActive" and C.akai or C.akai_dim)
+        pushed = pushed + 1
+      end
+    end
+  end
   local visible, open = R.ImGui_Begin(ctx, "MidiMix", true, wflags)
   if visible then
     local ok, err = pcall(function()
@@ -619,7 +640,10 @@ function draw_gui()
       end
     end)
     R.ImGui_End(ctx)
+    if pushed > 0 then R.ImGui_PopStyleColor(ctx, pushed) end
     if not ok then error(err, 0) end
+  elseif pushed > 0 then
+    R.ImGui_PopStyleColor(ctx, pushed)
   end
   if not open then S.gui_open = false end
 end

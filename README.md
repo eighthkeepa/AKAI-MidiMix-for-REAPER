@@ -4,7 +4,7 @@ English | [Русский](README.ru.md)
 
 Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaLearn, OSC, CSI or C++ extension. LEDs follow REAPER, and an optional ReaImGui window shows what the controller is doing.
 
-> Status: beta (v0.20). Tested against a mock REAPER (334 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
+> Status: beta (v0.21). Tested against a mock REAPER (353 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
 
 ## Features
 
@@ -14,7 +14,7 @@ Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaL
 - Knobs: bottom row = pan, middle row = stereo width, top row = sends. Soft takeover (pickup) on every knob and fader, so tracks never jump.
 - Per-track Mute, Solo (hold Solo + Mute), Rec arm. Solo tap = solo the whole bank. Solo + any Rec = rec arm the whole bank.
 - Sends: the knob follows the send shown in the window. Hold Rec + tap Send All to switch to the next send of one track. Sends can be matched by destination name.
-- Both Bank buttons together switch the bank to stereo pan.
+- Width only works on tracks in "stereo pan" mode; on other tracks the knob is ignored and the window shows "width n/a". The script never changes a track's pan mode unless you turn on "Allow switching tracks to stereo pan from the device" in Settings (then both Bank buttons together, or Solo + a middle knob, switch to stereo pan).
 
 **Rec row modes** (double-tap Solo or use the window): Rec arm, Send mute, FX bypass for the whole chain.
 
@@ -32,7 +32,7 @@ Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaL
 - Pause / resume and on/off from the controller (Send All).
 - Settings screen with saved values and a config file, plus a debug log.
 
-**Window** (needs ReaImGui, optional): a mixer view in the style of the Akai MPC mixer. Every strip shows track colour, selection, type icon, pan, width, send, a fader scale with stereo level meters and peak hold (after the fader and pan), dB readout, M / S / R buttons, folder bands. A MASTER strip shows the master fader. Tabs: Mixer, Instrument, Settings.
+**Window** (needs ReaImGui, optional): a mixer view in the style of the Akai MPC mixer. Every strip shows track colour, selection, type icon, pan, width, send, a fader scale with stereo level meters and peak hold (after the fader and pan), dB readout, M / S / R buttons, folder bands. A MASTER strip shows the master fader. Tabs: Mixer, Instrument, Settings (collapsible groups). The window has an Akai Red title bar and never docks.
 
 ## Requirements
 
@@ -62,8 +62,8 @@ If something does not work, run `midimix_probe.lua`: it lights the LEDs one by o
 | Rec the whole bank | Solo + any Rec |
 | Clear all solo | Solo + Send All |
 | Bank / first or last bank / one track | Bank Left, Bank Right / hold for 0.5 s / Solo + Bank |
-| Stereo pan for one track | Hold Solo, turn that track's middle knob |
-| Stereo pan for the bank | Both Bank buttons |
+| Stereo pan for one track (opt-in) | Hold Solo, turn that track's middle knob |
+| Stereo pan for the bank (opt-in) | Both Bank buttons |
 | Next send of one track | Hold its Rec, tap Send All |
 | Pause / resume | Send All, double tap |
 | Rec row mode | Solo, double tap |

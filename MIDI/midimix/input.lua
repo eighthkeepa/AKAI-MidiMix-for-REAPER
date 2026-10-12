@@ -189,8 +189,8 @@ function on_cc(cc, val, now)
   local key = key_of(c)
 
   if c.kind == "mid" and S.solo_held then
-    -- Solo + middle knob: switch the track to stereo pan
-    set_info(tr, "I_PANMODE", 5)
+    -- Solo + middle knob: switch the track to stereo pan (only when the user allowed it)
+    if CFG.allow_panmode_change then set_info(tr, "I_PANMODE", 5) else panmode_change_off() end
     S.solo_used = true
     S.picked[key] = nil
     return
