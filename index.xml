@@ -1,5 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="MidiMix" commit="437a4b1b9e57bd6a9fcbd1eb8ba1f123f66b0993">
+<index version="1" name="MidiMix" commit="525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4">
+  <category name="MIDI">
+    <reapack name="AKAI MidiMix probe.lua" type="script" desc="AKAI MidiMix probe">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Checks which notes and CCs the Akai MidiMix sends and lights its LEDs one by one.\par}
+}
+]]></description>
+      </metadata>
+      <version name="0.3" author="The Eighth" time="2026-10-12T20:26:51Z">
+        <changelog><![CDATA[0.3: renamed to "AKAI MidiMix probe"
+0.2: all text in English
+0.1: first version]]></changelog>
+        <source main="main">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/AKAI%20MidiMix%20probe.lua</source>
+      </version>
+    </reapack>
+    <reapack name="AKAI MidiMix.lua" type="script" desc="AKAI MidiMix for REAPER">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Akai MidiMix as a full REAPER controller in one ReaScript (no ReaLearn, OSC or extensions): banks, faders, pan, width, sends, mute/solo/rec, LEDs, instrument mode, a ReaImGui window. The window needs ReaImGui (optional).\par}
+}
+]]></description>
+        <link rel="website" href="https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER">GitHub</link>
+      </metadata>
+      <version name="0.22" author="The Eighth" time="2026-10-12T20:26:51Z">
+        <changelog><![CDATA[0.22: renamed to "AKAI MidiMix" (file, window, ReaPack); master mute / solo / pan (hold Bank Right); Bank hold jumps on release; double tap Solo restores the exact solo state; restart hint on collapsed Settings groups
+0.21: width knob only works on tracks in stereo pan mode; the script no longer switches pan mode on its own (opt-in setting); window title in Akai Red; window never docks; Settings tab uses collapsible groups
+0.20: window shows the master fader; fader scale follows the fader top; meters follow pan; fader top is +12 dB by default
+0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/]]></changelog>
+        <source main="main">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/AKAI%20MidiMix.lua</source>
+        <source file="midimix/device.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/device.lua</source>
+        <source file="midimix/gui.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/gui.lua</source>
+        <source file="midimix/highlight.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/highlight.lua</source>
+        <source file="midimix/input.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/input.lua</source>
+        <source file="midimix/instrument.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/instrument.lua</source>
+        <source file="midimix/settings.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/settings.lua</source>
+        <source file="midimix/tracks.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/525726ae3d1abc03f3cf7e8c77ac4bc5c53c0dc4/MIDI/midimix/tracks.lua</source>
+      </version>
+    </reapack>
+  </category>
   <metadata>
     <link rel="website" href="https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER">website</link>
   </metadata>
