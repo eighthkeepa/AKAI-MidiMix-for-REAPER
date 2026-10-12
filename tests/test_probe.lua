@@ -1,7 +1,7 @@
 local mock = dofile("tests/mock_reaper.lua")
 local R, st = mock.new({ resource_path = "/tmp" })
 _G.reaper = R
-dofile("MIDI/midimix_probe.lua")
+dofile("MIDI/AKAI MidiMix probe.lua")
 st.run(0.2)
 -- диоды: 30 нот * 0.4 с
 st.run(13)

@@ -11,7 +11,7 @@ function M.new(opts)
     in_names = opts.in_names or { "Other", "MIDI Mix" },
     out_names = opts.out_names or { "Other", "MIDI Mix" },
     dev_in = opts.dev_in or 1,
-    script_path = opts.script_path or "/nonexistent/midimix_reaper.lua",
+    script_path = opts.script_path or "/nonexistent/AKAI MidiMix.lua",
     spacer_works = opts.spacer_works ~= false,
     nextguid = 0, projext = {}, commands = {},
   }
@@ -188,7 +188,7 @@ function M.new(opts)
               if v ~= nil then return true, v end
               return false, (select(3, ...))
             end
-            if name == "ImGui_CollapsingHeader" then st.gui_headers = (st.gui_headers or 0) + 1; return true end
+            if name == "ImGui_CollapsingHeader" then st.gui_headers = (st.gui_headers or 0) + 1; st.gui_header_titles = st.gui_header_titles or {}; st.gui_header_titles[#st.gui_header_titles + 1] = select(2, ...); return true end
             if name == "ImGui_PushStyleColor" then
               st.gui_push = st.gui_push or {}
               st.gui_push[#st.gui_push + 1] = select(3, ...)

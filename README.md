@@ -1,16 +1,16 @@
 English | [Русский](README.ru.md)
 
-# MidiMix for REAPER
+# AKAI MidiMix for REAPER
 
 Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaLearn, OSC, CSI or C++ extension. LEDs follow REAPER, and an optional ReaImGui window shows what the controller is doing.
 
-> Status: beta (v0.21). Tested against a mock REAPER (353 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
+> Status: beta (v0.22). Tested against a mock REAPER (376 automated checks) and on one real MIDI Mix. Please report what differs on your setup.
 
 ## Features
 
 **Mixing**
 - Bank of up to 8 tracks (configurable). Bank Left / Bank Right move by a bank; hold for the first / last bank; Solo + Bank moves by one track.
-- Faders = track volume (top = +12 dB, configurable). Master fader = master volume.
+- Faders = track volume (top = +12 dB, configurable). Master fader = master volume. Hold Bank Right: Mute = master mute, Solo = master solo, any bottom knob = master pan.
 - Knobs: bottom row = pan, middle row = stereo width, top row = sends. Soft takeover (pickup) on every knob and fader, so tracks never jump.
 - Per-track Mute, Solo (hold Solo + Mute), Rec arm. Solo tap = solo the whole bank. Solo + any Rec = rec arm the whole bank.
 - Sends: the knob follows the send shown in the window. Hold Rec + tap Send All to switch to the next send of one track. Sends can be matched by destination name.
@@ -42,12 +42,12 @@ Use an **Akai MIDI Mix** as a full REAPER controller. One Lua ReaScript, no ReaL
 
 ## Installation
 
-1. Options > Show REAPER resource path in explorer/finder > `Scripts`. Copy the contents of the `MIDI/` folder of this repository there: `midimix_reaper.lua` and the `midimix/` folder side by side.
+1. Options > Show REAPER resource path in explorer/finder > `Scripts`. Copy the contents of the `MIDI/` folder of this repository there: `AKAI MidiMix.lua` and the `midimix/` folder side by side.
 2. Preferences > MIDI Devices: enable input and output for the MIDI Mix. "Enable input for control messages" is not needed.
 3. Tracks that record from "All MIDI inputs" will receive the MIDI Mix notes. Change their input.
-4. Actions > Show action list > New action > Load ReaScript > `midimix_reaper.lua` > Run. Add it to a toolbar for an on/off button.
+4. Actions > Show action list > New action > Load ReaScript > `AKAI MidiMix.lua` > Run. Add it to a toolbar for an on/off button.
 
-If something does not work, run `midimix_probe.lua`: it lights the LEDs one by one and logs what the device sends.
+If something does not work, run `AKAI MidiMix probe.lua`: it lights the LEDs one by one and logs what the device sends.
 
 ## Controls
 
@@ -61,10 +61,11 @@ If something does not work, run `midimix_probe.lua`: it lights the LEDs one by o
 | Solo the bank | Solo, short tap |
 | Rec the whole bank | Solo + any Rec |
 | Clear all solo | Solo + Send All |
-| Bank / first or last bank / one track | Bank Left, Bank Right / hold for 0.5 s / Solo + Bank |
+| Bank / first or last bank / one track | Bank Left, Bank Right / hold for 0.5 s, then release / Solo + Bank |
 | Stereo pan for one track (opt-in) | Hold Solo, turn that track's middle knob |
 | Stereo pan for the bank (opt-in) | Both Bank buttons |
 | Next send of one track | Hold its Rec, tap Send All |
+| Master mute / solo / pan | Hold Bank Right, then Mute / Solo / any bottom knob |
 | Pause / resume | Send All, double tap |
 | Rec row mode | Solo, double tap |
 | Instrument mode | Send All, single tap (when `global_sends` is off) |
@@ -91,9 +92,9 @@ All options and defaults are at the top of `midimix/settings.lua`. Values saved 
 ## Project layout
 
 ```
-MIDI/midimix_reaper.lua   entry point: loads the modules and runs the loop
+MIDI/AKAI MidiMix.lua   entry point: loads the modules and runs the loop
 MIDI/midimix/             settings, device, tracks, instrument, input, gui, highlight
-MIDI/midimix_probe.lua    hardware probe
+MIDI/AKAI MidiMix probe.lua    hardware probe
 tests/               mock REAPER and automated checks (python3 -I tests/run.py, needs lupa)
 ```
 
@@ -106,6 +107,8 @@ Modules share one environment (`CFG`, `S` and the helper functions), so a new fe
 - FX bind targets: FX on tracks and master; item FX and input FX are not supported yet.
 - Polling is about 30 Hz, so very fast moves can lose intermediate values.
 - The Rec row mode is not remembered between runs.
+- The LEDs show the send number for up to 16 sends per track (Rec LEDs 1..8, then blinking for 9..16). Sends above 16 still work, they are just not shown on the controller.
+- Learned knobs (instrument mode) use pickup as well. Turn the knob slowly and carefully past the parameter's current value; if the parameter was changed somewhere else, the knob has to catch it again.
 
 ## License
 

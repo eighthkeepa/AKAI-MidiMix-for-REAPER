@@ -1,7 +1,7 @@
 -- @noindex
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2026 The Eighth
--- MidiMix module: Window (ReaImGui). Loaded by midimix_reaper.lua into a shared environment.
+-- MidiMix module: Window (ReaImGui). Loaded by AKAI MidiMix.lua into a shared environment.
 -- Top-level names here are shared between modules (the 'local' keyword is dropped on purpose).
 
 ---------------------------------------------------------------------------
@@ -361,13 +361,27 @@ function draw_master(dl, x, y)
   R.ImGui_DrawList_AddRectFilled(dl, x, y, x + W, y + 3, C.pan, 0)
   R.ImGui_DrawList_AddRectFilled(dl, x, y + 3, x + W, y + 47, C.header, 0)
   R.ImGui_DrawList_AddText(dl, ix, y + 9, C.text, "MASTER")
-  R.ImGui_DrawList_AddText(dl, ix, y + 26, C.dim, "master fader")
+  R.ImGui_DrawList_AddText(dl, ix, y + 26, C.dim, S.bank_down and S.bank_down[1] and "layer: Bank R" or "master fader")
+  -- master pan (hold Bank Right + a bottom knob on the device)
+  local pan = info(tr, "D_PAN")
+  local ptxt = math.abs(pan) < 0.005 and "C" or string.format("%s%d", pan < 0 and "L" or "R", math.floor(math.abs(pan) * 100 + 0.5))
+  R.ImGui_DrawList_AddRectFilled(dl, ix, y + 53, ix + inner, y + 67, C.bar_bg, 2)
+  local norm = clamp((pan + 1) / 2, 0, 1)
+  local mid, px = ix + inner / 2, ix + inner * norm
+  if px >= mid then R.ImGui_DrawList_AddRectFilled(dl, mid, y + 53, math.max(px, mid + 1), y + 67, C.pan, 2)
+  else R.ImGui_DrawList_AddRectFilled(dl, px, y + 53, mid, y + 67, C.pan, 2) end
+  R.ImGui_DrawList_AddLine(dl, mid, y + 53, mid, y + 67, 0xFFFFFF55, 1)
+  local ptw = R.ImGui_CalcTextSize(ctx, ptxt)
+  R.ImGui_DrawList_AddText(dl, mid - ptw / 2, y + 53, C.text, ptxt)
   draw_fader_area(dl, ix, inner, y, tr, 0xCCCCCCFF, true, now)
-  local mute = info(tr, "B_MUTE") ~= 0
-  local fw = inner
-  R.ImGui_DrawList_AddRectFilled(dl, ix, y + 326, ix + fw, y + 348, mute and C.m_on or C.flag_off, 3)
-  local tw = R.ImGui_CalcTextSize(ctx, "M")
-  R.ImGui_DrawList_AddText(dl, ix + fw / 2 - tw / 2, y + 330, mute and text_on(C.m_on) or C.dim, "M")
+  -- M and S buttons
+  local fw = (inner - 4) / 2
+  for f, flag in ipairs({ { "M", info(tr, "B_MUTE") ~= 0, C.m_on }, { "S", info(tr, "I_SOLO") ~= 0, C.s_on } }) do
+    local fx = ix + (f - 1) * (fw + 4)
+    R.ImGui_DrawList_AddRectFilled(dl, fx, y + 326, fx + fw, y + 348, flag[2] and flag[3] or C.flag_off, 3)
+    local tw = R.ImGui_CalcTextSize(ctx, flag[1])
+    R.ImGui_DrawList_AddText(dl, fx + fw / 2 - tw / 2, y + 330, flag[2] and text_on(flag[3]) or C.dim, flag[1])
+  end
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
 end
 
@@ -454,9 +468,13 @@ end
 function draw_settings()
   local width = CFG.bank_size * (G.W + G.GAP) - G.GAP
   R.ImGui_Dummy(ctx, width, 1)
-  local need_restart = false
+  local need_restart, grp_pending, cur_grp = false, {}, nil
   for _, item in ipairs(SCHEMA) do
-    if item.key and not item.live and SHOWN[item.key] ~= CFG[item.key] then need_restart = true end
+    if item.group then cur_grp = item.group
+    elseif item.key and not item.live and SHOWN[item.key] ~= CFG[item.key] then
+      need_restart = true
+      grp_pending[cur_grp or ""] = true
+    end
   end
   local section_open, first_group = true, true
   for _, item in ipairs(SCHEMA) do
@@ -464,7 +482,9 @@ function draw_settings()
       -- every group is a collapsible header (the first one starts open), so the tab stays short
       local fl = (first_group and R.ImGui_TreeNodeFlags_DefaultOpen) and R.ImGui_TreeNodeFlags_DefaultOpen() or 0
       first_group = false
-      section_open = R.ImGui_CollapsingHeader(ctx, item.group, fl) and true or false
+      -- a closed group still tells you when one of its settings waits for a restart
+      local title = item.group .. (grp_pending[item.group] and "   (restart needed)" or "") .. "##grp_" .. item.group
+      section_open = R.ImGui_CollapsingHeader(ctx, title, fl) and true or false
     elseif section_open then
       local v, changed, nv = SHOWN[item.key], false, nil
       local id = item.label .. "##" .. item.key
@@ -494,6 +514,7 @@ function draw_settings()
     end
   end
   R.ImGui_Spacing(ctx)
+  if need_restart then R.ImGui_TextColored(ctx, C.paused, "Restart the script to apply the changed settings.") end
   if R.ImGui_Button(ctx, "Dump track info (midimix_tracks.txt)") then dump_tracks() end
   if R.ImGui_Button(ctx, "Reset to defaults") then reset_settings() end
   R.ImGui_SameLine(ctx)
@@ -554,7 +575,7 @@ function draw_gui()
   if not HAVE_GUI or not S.gui_open then return end
   if not strips_valid() then return end
   if not ctx then
-    ctx = R.ImGui_CreateContext("MidiMix")
+    ctx = R.ImGui_CreateContext("AKAI MidiMix")
   end
   local wflags = R.ImGui_WindowFlags_AlwaysAutoResize and R.ImGui_WindowFlags_AlwaysAutoResize() or 0
   if R.ImGui_WindowFlags_NoDocking then wflags = wflags | (R.ImGui_WindowFlags_NoDocking() or 0) end   -- never snap into REAPER's docker
@@ -568,7 +589,7 @@ function draw_gui()
       end
     end
   end
-  local visible, open = R.ImGui_Begin(ctx, "MidiMix", true, wflags)
+  local visible, open = R.ImGui_Begin(ctx, "AKAI MidiMix", true, wflags)
   if visible then
     local ok, err = pcall(function()
       -- status line
