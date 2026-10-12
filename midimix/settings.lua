@@ -1,3 +1,4 @@
+-- @noindex
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Copyright (c) 2026 The Eighth
 -- MidiMix module: Settings, config file, helpers, shared state. Loaded by midimix_reaper.lua into a shared environment.
