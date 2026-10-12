@@ -1,18 +1,17 @@
---[[
-  @description MidiMix for REAPER
-  @version 0.19
-  @author The Eighth
-  @about
-    Akai MidiMix as a full REAPER controller in one ReaScript (no ReaLearn, OSC or extensions):
-    banks, faders, pan, width, sends, mute/solo/rec, LEDs, instrument mode, a ReaImGui window.
-    The window needs ReaImGui (optional).
-  @provides
-    [main] midimix_reaper.lua
-    [nomain] midimix/*.lua
-  @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
-  @changelog
-    0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
+-- @description MidiMix for REAPER
+-- @version 0.19
+-- @author The Eighth
+-- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
+-- @about
+--   Akai MidiMix as a full REAPER controller in one ReaScript (no ReaLearn, OSC or extensions):
+--   banks, faders, pan, width, sends, mute/solo/rec, LEDs, instrument mode, a ReaImGui window.
+--   The window needs ReaImGui (optional).
+-- @provides
+--   [nomain] midimix/*.lua
+-- @changelog
+--   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
+--[[
   MidiMix for REAPER - version 0.19
 
   Not verified on every setup. If something is off, run midimix_probe.lua first:
