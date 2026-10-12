@@ -1,5 +1,5 @@
 -- @description MidiMix for REAPER
--- @version 0.19
+-- @version 0.20
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,10 +9,11 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
+--   0.20: window shows the master fader; fader scale follows the fader top; meters follow pan; fader top is +12 dB by default
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  MidiMix for REAPER - version 0.19
+  MidiMix for REAPER - version 0.20
 
   Not verified on every setup. If something is off, run midimix_probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.

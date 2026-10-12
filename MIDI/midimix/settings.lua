@@ -18,7 +18,7 @@ CFG = {
   bank_hold_s = 0.5,           -- hold Bank Left / Right this long = jump to the first / last bank
   pickup_window = 3,           -- pickup: tolerance in steps 0..127
   center_snap = 2,             -- pan and width: snap to center, steps 0..127
-  fader_max_db = 6,            -- top of the fader, dB
+  fader_max_db = 12,           -- top of the fader, dB (REAPER and the MIDI Mix go up to +12)
   solo_value = 2,              -- value written to I_SOLO: 1 = solo, 2 = solo in place
   highlight = "spacers",       -- how the bank is shown in the track list / mixer:
                                --   "spacers" = spacer above and below the bank
@@ -37,6 +37,7 @@ CFG = {
   window = true,               -- draw the window (if ReaImGui is installed)
   track_sends = true,          -- hold Rec N + tap Send All = next send of that track only
   global_sends = false,        -- true: a plain Send All tap switches the send of ALL tracks in the bank
+  meter_after_pan = true,      -- meters follow pan: the far side gets quieter (balance law)
   meter_after_fader = true,    -- multiply the meter by the fader (the REAPER API gives the level before the fader)
   startup_anim = true,         -- LED circle when the script starts / device appears
   startup_step_s = 0.07,       -- time per LED step of that circle
@@ -154,6 +155,7 @@ SCHEMA = {
   { key = "scroll_mixer", label = "Scroll mixer to the bank", kind = "bool", live = true },
   { group = "LEDs and animations" },
   { key = "meter_after_fader", label = "Meters show level after the fader", kind = "bool", live = true },
+  { key = "meter_after_pan", label = "Meters follow pan (left/right levels)", kind = "bool", live = true },
   { key = "startup_anim", label = "LED circle on start", kind = "bool", live = true },
   { key = "exit_blink", label = "Double blink on exit", kind = "bool", live = true },
   { key = "blink_hz", label = "Solo blink, Hz", kind = "float", min = 0.5, max = 8, live = true },

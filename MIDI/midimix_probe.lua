@@ -1,28 +1,30 @@
 -- @description MidiMix probe
--- @version 0.1
+-- @version 0.2
 -- @author The Eighth
 -- @about Checks which notes and CCs the Akai MidiMix sends and lights its LEDs one by one.
--- @changelog 0.1: first version
+-- @changelog
+--   0.2: all text in English
+--   0.1: first version
 
 --[[
-  MidiMix — пробный скрипт (разведка). Версия 0.1
+  MidiMix probe, version 0.2
 
-  Что делает:
-    1. Показывает список MIDI-устройств и находит MidiMix.
-    2. Зажигает диоды по очереди (ноты 1..30), по 0.4 сек. Смотри, какие загораются.
-    3. Печатает каждое событие от MidiMix: что нажато/повёрнуто, номер ноты/CC, значение.
-    4. Замечает «дамп» (много CC подряд) — так ведёт себя кнопка Send All.
-    5. Всё пишет в консоль REAPER и в файл midimix_probe_log.txt
-       (папка ресурсов REAPER: Опции → Показать папку ресурсов).
+  What it does:
+    1. Lists the MIDI devices and finds the MidiMix.
+    2. Lights the LEDs one by one (notes 1..30), 0.4 s each. Watch which ones light up.
+    3. Prints every event from the MidiMix: what was pressed/turned, note/CC number, value.
+    4. Spots a "dump" (many CCs at once): that is what the Send All button does.
+    5. Writes everything to the REAPER console and to midimix_probe_log.txt
+       (REAPER resource folder: Options > Show REAPER resource path).
 
-  Перед запуском: Настройки → MIDI устройства. Включи MidiMix как вход
-  (Enable input) и как выход (Enable output). «Enable input for control messages» не нужен.
+  Before you run it: Preferences > MIDI Devices. Enable the MidiMix as input
+  (Enable input) and as output (Enable output). "Enable input for control messages" is not needed.
 
-  Что нажать по порядку (каждое — один раз, пауза между ними):
+  What to press, in this order (once each, with a pause between):
     mute 1, rec arm 1, mute 8, rec arm 8, Bank Left, Bank Right, Solo,
-    Send All (коротко, потом подержать пару секунд),
-    по одной ручке из каждого ряда у полосы 1 и 8, фейдер 1, фейдер 8, мастер-фейдер.
-  Потом отправь мне файл midimix_probe_log.txt.
+    Send All (a short press, then hold it for a couple of seconds),
+    one knob from each row on strips 1 and 8, fader 1, fader 8, master fader.
+  Then send the file midimix_probe_log.txt to the author.
 
   Copyright (c) 2026 The Eighth. Licensed under the GNU GPL v3 or later (see LICENSE).
 ]]
@@ -37,7 +39,7 @@ local function out(s)
   if f then f:write(s .. "\n"); f:flush() end
 end
 
--- Заводские значения, чтобы подписывать события
+-- Factory values, used to label the events
 local known = {}
 do
   local m = {
@@ -49,36 +51,36 @@ do
     rec = { 3, 6, 9, 12, 15, 18, 21, 24 },
   }
   for i = 1, 8 do
-    known["cc" .. m.fader[i]] = "фейдер " .. i
-    known["cc" .. m.top[i]] = "верхняя ручка " .. i
-    known["cc" .. m.mid[i]] = "средняя ручка " .. i
-    known["cc" .. m.bot[i]] = "нижняя ручка " .. i
+    known["cc" .. m.fader[i]] = "fader " .. i
+    known["cc" .. m.top[i]] = "top knob " .. i
+    known["cc" .. m.mid[i]] = "middle knob " .. i
+    known["cc" .. m.bot[i]] = "bottom knob " .. i
     known["n" .. m.mute[i]] = "mute " .. i
     known["n" .. m.rec[i]] = "rec arm " .. i
   end
-  known["cc62"] = "мастер-фейдер"
+  known["cc62"] = "master fader"
   known["n25"] = "Bank Left"
   known["n26"] = "Bank Right"
   known["n27"] = "Solo"
 end
 
-out("=== MidiMix probe v0.1 ===")
+out("=== MidiMix probe v0.2 ===")
 out(os.date("%Y-%m-%d %H:%M:%S"))
 
 local in_ok, out_idx = {}, nil
 local function dev_name(i)
   local ok, name = R.GetMIDIInputName(i, "")
-  return ok and name or ("(устройство " .. tostring(i) .. ")")
+  return ok and name or ("(device " .. tostring(i) .. ")")
 end
 
-out("-- Входы MIDI:")
+out("-- MIDI inputs:")
 for i = 0, R.GetNumMIDIInputs() - 1 do
   local ok, name = R.GetMIDIInputName(i, "")
   local hit = ok and name and name:lower():find(MATCH)
   out(string.format("  [%d] %s%s", i, tostring(name), hit and "   <== MidiMix" or ""))
   if hit then in_ok[i] = true end
 end
-out("-- Выходы MIDI:")
+out("-- MIDI outputs:")
 for i = 0, R.GetNumMIDIOutputs() - 1 do
   local ok, name = R.GetMIDIOutputName(i, "")
   local hit = ok and name and name:lower():find(MATCH)
@@ -86,26 +88,26 @@ for i = 0, R.GetNumMIDIOutputs() - 1 do
   if hit and out_idx == nil then out_idx = i end
 end
 if next(in_ok) == nil then
-  out("!! Вход MidiMix не найден. Проверь подключение и Настройки → MIDI устройства.")
-  out("   Если имя другое, поменяй MATCH в начале скрипта.")
+  out("!! MidiMix input not found. Check the connection and Preferences > MIDI Devices.")
+  out("   If the device has a different name, change MATCH at the top of the script.")
 end
 if out_idx == nil then
-  out("!! Выход MidiMix не найден: диоды проверить не получится.")
+  out("!! MidiMix output not found: the LEDs cannot be tested.")
 end
 
 local function send(b1, b2, b3)
   if out_idx ~= nil then R.StuffMIDIMessage(16 + out_idx, b1, b2, b3) end
 end
 
--- Тест диодов
+-- LED test
 local LED_FIRST, LED_LAST, LED_STEP = 1, 30, 0.4
 local led_note, led_t = LED_FIRST - 1, R.time_precise()
 local led_done = out_idx == nil
 if not led_done then
-  out("-- Тест диодов: смотри на устройство. Печатаю номер ноты, когда зажигаю.")
+  out("-- LED test: watch the device. The note number is printed when an LED is lit.")
 end
 
--- Чтение событий
+-- Reading events
 local last_seq
 do
   local seq = R.MIDI_GetRecentInputEvent(0)
@@ -117,33 +119,33 @@ local pressed = {}
 local function describe(b1, b2, b3)
   local t, ch = b1 & 0xF0, (b1 & 0x0F) + 1
   if t == 0x90 and b3 > 0 then
-    return string.format("НОТА ВКЛ   ch%d нота %-3d вел %-3d  %s", ch, b2, b3, known["n" .. b2] or "(?)"), "n" .. b2
+    return string.format("NOTE ON    ch%d note %-3d vel %-3d  %s", ch, b2, b3, known["n" .. b2] or "(?)"), "n" .. b2
   elseif t == 0x80 or (t == 0x90 and b3 == 0) then
-    return string.format("НОТА ВЫКЛ  ch%d нота %-3d вел %-3d  %s", ch, b2, b3, known["n" .. b2] or "(?)"), "n" .. b2
+    return string.format("NOTE OFF   ch%d note %-3d vel %-3d  %s", ch, b2, b3, known["n" .. b2] or "(?)"), "n" .. b2
   elseif t == 0xB0 then
-    return string.format("CC         ch%d cc   %-3d знач %-3d  %s", ch, b2, b3, known["cc" .. b2] or "(?)"), "cc" .. b2
+    return string.format("CC         ch%d cc   %-3d val %-3d  %s", ch, b2, b3, known["cc" .. b2] or "(?)"), "cc" .. b2
   end
-  return string.format("ДРУГОЕ     байты %d %d %d", b1, b2 or -1, b3 or -1), nil
+  return string.format("OTHER      bytes %d %d %d", b1, b2 or -1, b3 or -1), nil
 end
 
 local function tick()
   local now = R.time_precise()
 
-  -- диоды
+  -- LEDs
   if not led_done and now - led_t >= LED_STEP then
     if led_note >= LED_FIRST then send(0x90, led_note, 0) end
     led_note = led_note + 1
     led_t = now
     if led_note > LED_LAST then
       led_done = true
-      out("-- Тест диодов закончен. Теперь нажимай кнопки и крути ручки.")
+      out("-- LED test finished. Now press buttons and turn knobs.")
     else
       send(0x90, led_note, 127)
-      out("   диод: нота " .. led_note)
+      out("   LED: note " .. led_note)
     end
   end
 
-  -- события
+  -- events
   local evs = {}
   local newest
   for idx = 0, 4095 do
@@ -160,20 +162,20 @@ local function tick()
     if #e.buf >= 1 then
       local b1, b2, b3 = e.buf:byte(1, 3)
       local text, key = describe(b1, b2 or 0, b3 or 0)
-      local mine = in_ok[e.dev] and "" or ("  [от другого устройства: " .. dev_name(e.dev) .. "]")
+      local mine = in_ok[e.dev] and "" or ("  [from another device: " .. dev_name(e.dev) .. "]")
       if in_ok[e.dev] or next(in_ok) == nil then
         out(string.format("%8.3f  %s", now, text))
-        -- пачка CC подряд
+        -- a burst of CCs
         if (b1 & 0xF0) == 0xB0 then
           if now - burst.t0 > 0.2 then burst = { t0 = now, seen = {}, n = 0, shown = false } end
           if not burst.seen[b2] then burst.seen[b2] = true; burst.n = burst.n + 1 end
           if burst.n >= 15 and not burst.shown then
             burst.shown = true
-            out("   >>> ДАМП: " .. burst.n .. " разных CC за 0.2 сек (похоже на Send All)")
+            out("   >>> DUMP: " .. burst.n .. " different CCs in 0.2 s (looks like Send All)")
           end
         end
       else
-        out(string.format("%8.3f  (чужое) %s%s", now, text, mine))
+        out(string.format("%8.3f  (other) %s%s", now, text, mine))
       end
     end
   end
@@ -181,15 +183,15 @@ end
 
 local function loop()
   local ok, err = pcall(tick)
-  if not ok then out("ошибка: " .. tostring(err)) end
+  if not ok then out("error: " .. tostring(err)) end
   R.defer(loop)
 end
 
 R.atexit(function()
   for n = 0, 40 do send(0x90, n, 0) end
-  out("=== probe остановлен ===")
+  out("=== probe stopped ===")
   if f then f:close() end
 end)
 
-out("Запущено. Остановить: закрой окно скрипта или Actions → Terminate.")
+out("Running. To stop: close the script window or Actions > Terminate.")
 loop()

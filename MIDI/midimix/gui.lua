@@ -144,7 +144,7 @@ function dump_tracks()
 end
 
 -- level meters: smoothed peaks with a hold line
-function meter_values(tr, now)
+function meter_values(tr, now, master)
   local g = guid(tr)
   local m = S.meters[g]
   if not m then m = { l = 0, r = 0, hl = 0, hr = 0, th = now }; S.meters[g] = m end
@@ -155,6 +155,10 @@ function meter_values(tr, now)
   if CFG.meter_after_fader then
     local gain = info(tr, "B_MUTE") ~= 0 and 0 or info(tr, "D_VOL")
     pl, pr = pl * gain, pr * gain
+  end
+  if CFG.meter_after_pan and not master then   -- pan as balance: the far side gets quieter
+    local pan = info(tr, "D_PAN")
+    if pan > 0 then pl = pl * (1 - pan) elseif pan < 0 then pr = pr * (1 + pan) end
   end
   local fall = dt * 2.5                       -- how fast the bar falls (linear units per second)
   m.l = pl >= m.l and pl or math.max(pl, m.l - fall * m.l - 0.0005)
@@ -173,7 +177,60 @@ function lighten(col, amt)    -- col = 0xRRGGBBAA; mix with white so dark colour
   return (math.floor(r) << 24) | (math.floor(g) << 16) | (math.floor(b) << 8) | 0xFF
 end
 
-FADER_TICKS = { { 6, "6" }, { 3, "3" }, { 0, "0" }, { -3, "3" }, { -9, "9" }, { -20, "20" }, { -30, "30" } }
+-- scale marks follow the fader top from the settings (e.g. +12 dB)
+function fader_ticks()
+  local top = CFG.fader_max_db or 12
+  local t = {}
+  for _, d in ipairs({ 12, 9, 6, 3, 0, -3, -9, -20, -30 }) do
+    if d <= top + 0.001 then t[#t + 1] = d end
+  end
+  if #t == 0 or top - t[1] > 1.2 then table.insert(t, 1, top) end
+  local out = {}
+  for _, d in ipairs(t) do
+    out[#out + 1] = { d, d > 0.001 and string.format("+%g", d) or string.format("%g", d) }
+  end
+  return out
+end
+
+-- fader scale + stereo meters + fader handle + dB numbers; shared by track strips and the master strip
+function draw_fader_area(dl, ix, inner, y, tr, mcol, master, now)
+  local function rect(x1, y1, x2, y2, col, rnd) R.ImGui_DrawList_AddRectFilled(dl, x1, y1, x2, y2, col, rnd or 0) end
+  local function label(tx, ty, col, str) R.ImGui_DrawList_AddText(dl, tx, ty, col, str) end
+  local ay, ah = y + 124, 176
+  local sx1 = ix + 24
+  local function ypos(norm) return ay + ah - 2 - clamp(norm, 0, 1) * (ah - 4) end
+  local last_y
+  for _, t in ipairs(fader_ticks()) do
+    local yy = ypos(norm_from_gain(10 ^ (t[1] / 20)))
+    if not last_y or math.abs(yy - last_y) >= 13 then
+      R.ImGui_DrawList_AddLine(dl, sx1, yy, ix + inner, yy, 0xFFFFFF30, 1)
+      label(ix, yy - 6, C.dim, t[2])
+      last_y = yy
+    end
+  end
+  label(ix, ay + ah - 14, C.dim, "inf")
+  local mw, mgap = 15, 2
+  local mx = sx1 + 4
+  local m = meter_values(tr, now, master)
+  for side = 0, 1 do
+    local v = side == 0 and m.l or m.r
+    local hv = side == 0 and m.hl or m.hr
+    local x1 = mx + side * (mw + mgap)
+    local top = ypos(norm_from_gain(math.max(v, 1e-5)))
+    if v > 0.00002 then rect(x1, top, x1 + mw, ay + ah - 2, mcol, 0) end
+    local ht = ypos(norm_from_gain(math.max(hv, 1e-5)))
+    if hv > 0.00002 then rect(x1, ht - 1, x1 + mw, ht + 1, lighten(mcol, 0.6) | 0xFF, 0) end
+  end
+  local vol = info(tr, "D_VOL")
+  local fy = ypos(norm_from_gain(vol))
+  R.ImGui_DrawList_AddLine(dl, sx1, fy, ix + inner - 6, fy, 0xFFFFFFFF, 2)
+  R.ImGui_DrawList_AddRectFilled(dl, ix + inner - 9, fy - 6, ix + inner, fy + 6, 0xFFFFFFFF, 3)
+  local peak = math.max(m.hl, m.hr)
+  label(ix, y + 304, C.text, db_text(vol) .. "dB")
+  local ptxt2 = (peak > 0.00002) and (db_text(peak) .. "dB") or "-inf dB"
+  local pw = R.ImGui_CalcTextSize(ctx, ptxt2)
+  label(ix + inner - pw, y + 304, peak > 1 and C.bad or C.dim, ptxt2)
+end
 
 -- one channel strip, in the style of the Akai MPC mixer
 function draw_strip(dl, x, y, i, tr)
@@ -240,7 +297,6 @@ function draw_strip(dl, x, y, i, tr)
     return
   end
 
-  local vol = info(tr, "D_VOL")
   local pan = info(tr, "D_PAN")
   local ptxt = math.abs(pan) < 0.005 and "C" or string.format("%s%d", pan < 0 and "L" or "R", math.floor(math.abs(pan) * 100 + 0.5))
   bar(y + 53, 14, (pan + 1) / 2, C.pan, ptxt, true)
@@ -267,39 +323,7 @@ function draw_strip(dl, x, y, i, tr)
     end
   end
 
-  -- fader area: scale, level meters in the track colour, fader line with a handle
-  local ay, ah = y + 124, 176
-  local sx1 = ix + 24                                  -- scale starts after the numbers
-  local function ypos(norm) return ay + ah - 2 - clamp(norm, 0, 1) * (ah - 4) end
-  for _, t in ipairs(FADER_TICKS) do
-    local yy = ypos(norm_from_gain(10 ^ (t[1] / 20)))
-    R.ImGui_DrawList_AddLine(dl, sx1, yy, ix + inner, yy, 0xFFFFFF30, 1)
-    label(ix, yy - 6, C.dim, t[2])
-  end
-  label(ix, ay + ah - 14, C.dim, "inf")
-  local mcol = has_col and ncol or tinfo[2]
-  local mw, mgap = 15, 2
-  local mx = sx1 + 4
-  local m = meter_values(tr, now)
-  for side = 0, 1 do
-    local v = side == 0 and m.l or m.r
-    local hv = side == 0 and m.hl or m.hr
-    local x1 = mx + side * (mw + mgap)
-    local top = ypos(norm_from_gain(math.max(v, 1e-5)))
-    if v > 0.00002 then rect(x1, top, x1 + mw, ay + ah - 2, mcol, 0) end
-    local ht = ypos(norm_from_gain(math.max(hv, 1e-5)))
-    if hv > 0.00002 then rect(x1, ht - 1, x1 + mw, ht + 1, lighten(mcol, 0.6) | 0xFF, 0) end
-  end
-  local fy = ypos(norm_from_gain(vol))
-  R.ImGui_DrawList_AddLine(dl, sx1, fy, ix + inner - 6, fy, 0xFFFFFFFF, 2)
-  R.ImGui_DrawList_AddRectFilled(dl, ix + inner - 9, fy - 6, ix + inner, fy + 6, 0xFFFFFFFF, 3)
-
-  -- numbers under the fader: fader level and peak hold
-  local peak = math.max(m.hl, m.hr)
-  label(ix, y + 304, C.text, db_text(vol) .. "dB")
-  local ptxt2 = (peak > 0.00002) and (db_text(peak) .. "dB") or "-inf dB"
-  local pw = R.ImGui_CalcTextSize(ctx, ptxt2)
-  label(ix + inner - pw, y + 304, peak > 1 and C.bad or C.dim, ptxt2)
+  draw_fader_area(dl, ix, inner, y, tr, has_col and ncol or tinfo[2], false, now)
 
   -- M S R / T / F buttons
   local fw = (inner - 8) / 3
@@ -316,6 +340,29 @@ function draw_strip(dl, x, y, i, tr)
   end
 
   label(ix, y + 354, tinfo[2], tinfo[1] .. (S.manual[i] and "*" or ""))
+  R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
+end
+
+-- master strip: volume (the master fader on the device), meters, mute
+function draw_master(dl, x, y)
+  local W, H = G.W, G.H
+  local PADX = 7
+  local inner = W - 2 * PADX
+  local ix = x + PADX
+  local now = R.time_precise()
+  local tr = R.GetMasterTrack(0)
+  if not tr then return end
+  R.ImGui_DrawList_AddRectFilled(dl, x, y, x + W, y + H, C.strip, 0)
+  R.ImGui_DrawList_AddRectFilled(dl, x, y, x + W, y + 3, C.pan, 0)
+  R.ImGui_DrawList_AddRectFilled(dl, x, y + 3, x + W, y + 47, C.header, 0)
+  R.ImGui_DrawList_AddText(dl, ix, y + 9, C.text, "MASTER")
+  R.ImGui_DrawList_AddText(dl, ix, y + 26, C.dim, "master fader")
+  draw_fader_area(dl, ix, inner, y, tr, 0xCCCCCCFF, true, now)
+  local mute = info(tr, "B_MUTE") ~= 0
+  local fw = inner
+  R.ImGui_DrawList_AddRectFilled(dl, ix, y + 326, ix + fw, y + 348, mute and C.m_on or C.flag_off, 3)
+  local tw = R.ImGui_CalcTextSize(ctx, "M")
+  R.ImGui_DrawList_AddText(dl, ix + fw / 2 - tw / 2, y + 330, mute and text_on(C.m_on) or C.dim, "M")
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
 end
 
@@ -547,8 +594,14 @@ function draw_gui()
               report_error("window", err2)
             end
           end
+          local mxx = sx + CFG.bank_size * (G.W + G.GAP) + G.PAD
+          local okm, errm = pcall(draw_master, dl, mxx, sy + 20)
+          if not okm and not S.gui_err_shown then
+            S.gui_err_shown = true
+            report_error("window", errm)
+          end
           R.ImGui_SetCursorScreenPos(ctx, sx, sy)
-          R.ImGui_Dummy(ctx, CFG.bank_size * (G.W + G.GAP) - G.GAP, G.H + 24)
+          R.ImGui_Dummy(ctx, CFG.bank_size * (G.W + G.GAP) + G.PAD + G.W, G.H + 24)
           if R.ImGui_SetItemTooltip then R.ImGui_SetItemTooltip(ctx, "Click the type under a strip to set it by hand (* = manual). Cycles through all types, then back to automatic.") end
           R.ImGui_EndTabItem(ctx)
         end

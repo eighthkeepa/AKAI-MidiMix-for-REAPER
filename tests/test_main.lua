@@ -46,7 +46,7 @@ local function norm_of(db_gain_norm) return db_gain_norm end
 -- ступень фейдера, соответствующая усилению 1 (0 дБ) в макете
 local function step_for_gain(g)
   local R = _G.reaper
-  return R.DB2SLIDER(20 * math.log(g, 10)) / R.DB2SLIDER(6) * 127
+  return R.DB2SLIDER(20 * math.log(g, 10)) / R.DB2SLIDER(12) * 127
 end
 
 -- Номера по умолчанию
@@ -681,6 +681,38 @@ test("окно: полоса в стиле MPC (метры, выбранный �
   -- индикатор считается после фейдера: тише фейдер -> ниже уровень
   st.peak = { [st.tracks[1].name] = 0.8 }
   st.tracks[1].D_VOL = 0.5; st.run(0.6)
+  no_errors(st)
+end)
+
+test("окно: мастер-полоса, шкала до fader_max_db, метры следуют за панорамой", function()
+  local function texts_have(st, str)
+    for _, t in ipairs(st.gui_texts or {}) do if t == str then return true end end
+    return false
+  end
+  local st = setup({ gui = true, tracks = 4 })
+  st.run(0.4)
+  no_errors(st)
+  check(texts_have(st, "MASTER"), "в окне есть полоса мастера")
+  check(texts_have(st, "+12"), "по умолчанию шкала доходит до +12")
+  local st6 = setup({ gui = true, tracks = 4, cfg = "return { fader_max_db = 6 }" })
+  st6.run(0.4)
+  no_errors(st6)
+  check(texts_have(st6, "+6") and not texts_have(st6, "+12"), "при fader_max_db = 6 шкала до +6")
+  -- метры: ширина 15 = один канал; при панораме вправо левый канал пропадает
+  local function meter_rects(s)
+    local n = 0
+    for _, r in ipairs(s.gui_rects or {}) do if r.x2 - r.x1 == 15 then n = n + 1 end end
+    return n
+  end
+  local function count_with_pan(pan)
+    local s2 = setup({ gui = true, tracks = 4 })
+    s2.peak = { [s2.tracks[1].name] = 0.5 }
+    s2.tracks[1].D_PAN = pan
+    s2.run(0.5)
+    return meter_rects(s2)
+  end
+  local center, right = count_with_pan(0), count_with_pan(1)
+  check(center > 0 and right > 0 and right < center, "панорама вправо гасит левый метр (" .. center .. " -> " .. right .. ")")
   no_errors(st)
 end)
 
