@@ -1,5 +1,5 @@
 -- @description AKAI MidiMix for REAPER
--- @version 0.22
+-- @version 0.23
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,13 +9,14 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
+--   0.23: softer, a bit brighter 0 dB line; Help tab and hover hints; second mixer look in the style of the Akai MPC 2.0; Russian window (Settings > Window); settings group "Window"
 --   0.22: renamed to "AKAI MidiMix" (file, window, ReaPack); master mute / solo / pan (hold Bank Right); Bank hold jumps on release; double tap Solo restores the exact solo state; restart hint on collapsed Settings groups
 --   0.21: width knob only works on tracks in stereo pan mode; the script no longer switches pan mode on its own (opt-in setting); window title in Akai Red; window never docks; Settings tab uses collapsible groups
 --   0.20: window shows the master fader; fader scale follows the fader top; meters follow pan; fader top is +12 dB by default
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  AKAI MidiMix for REAPER - version 0.22
+  AKAI MidiMix for REAPER - version 0.23
 
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
@@ -55,7 +56,7 @@ end
 local ENV = setmetatable({}, { __index = _G })
 ENV.R = R
 ENV.MODULE_DIR = dir .. "/midimix"
-for _, name in ipairs({ "settings", "device", "tracks", "instrument", "input", "gui", "highlight" }) do
+for _, name in ipairs({ "settings", "lang", "device", "tracks", "instrument", "input", "gui", "highlight" }) do
   local path = ENV.MODULE_DIR .. "/" .. name .. ".lua"
   local chunk, err = loadfile(path, "t", ENV)
   if not chunk then

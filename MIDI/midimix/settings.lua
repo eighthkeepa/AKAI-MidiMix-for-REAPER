@@ -37,6 +37,9 @@ CFG = {
   blink_hz = 2,                -- solo blink rate
   led_refresh_s = 5,           -- how often to resend the LED state
   window = true,               -- draw the window (if ReaImGui is installed)
+  language = "en",             -- window language: "en" or "ru"
+  mixer_style = "classic",     -- window mixer look: "classic" (bars) or "mpc" (round knobs, like the Akai MPC 2.0 mixer)
+  tooltips = true,             -- short hints when the mouse rests on a part of a strip
   track_sends = true,          -- hold Rec N + tap Send All = next send of that track only
   global_sends = false,        -- true: a plain Send All tap switches the send of ALL tracks in the bank
   meter_after_pan = true,      -- meters follow pan: the far side gets quieter (balance law)
@@ -135,6 +138,13 @@ CFG.bank_size = math.max(1, math.min(8, math.floor(CFG.bank_size)))
 ---------------------------------------------------------------------------
 SET_SEC = "MidiMixLua_settings"
 SCHEMA = {
+  { group = "Window" },
+  { key = "language", label = "Language", kind = "enum", live = false, tip = "Window language. Needs a restart.",
+    options = { "en", "ru" }, names = { "English", "Русский" } },
+  { key = "mixer_style", label = "Mixer look", kind = "enum", live = true,
+    options = { "classic", "mpc" }, names = { "Classic (bars)", "MPC 2.0 (round knobs)" } },
+  { key = "tooltips", label = "Hover hints", kind = "bool", live = true,
+    tip = "Show a short hint when the mouse rests on a part of a strip" },
   { group = "Knobs and faders" },
   { key = "pickup_window", label = "Pickup tolerance", kind = "int", min = 0, max = 20, live = true,
     tip = "0 = no tolerance. Bigger = easier to pick up a value, steps 0..127" },

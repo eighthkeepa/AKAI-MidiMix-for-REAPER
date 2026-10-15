@@ -1064,5 +1064,81 @@ test("режим инструмент: learn, ручка -> параметр п�
   no_errors(st)
 end)
 
+test("окно: нулевая линия заметнее остальных меток, но не кричит", function()
+  local st = setup({ gui = true, tracks = 4 })
+  st.run(0.4)
+  no_errors(st)
+  local bright, thick = false, false
+  for _, l in ipairs(st.gui_lines or {}) do
+    if l.col == 0xFFFFFF8C then bright = true; if l.th == 1 then thick = true end end
+  end
+  check(bright and thick, "линия 0 дБ нарисована мягко: заметнее обычных меток, толщиной 1")
+  local st2 = setup({ gui = true, tracks = 4, cfg = "return { fader_max_db = 6 }" })
+  st2.run(0.4)
+  local zero_text = false
+  for _, t in ipairs(st2.gui_texts or {}) do if t == "0" then zero_text = true end end
+  check(zero_text, "подпись 0 есть и при верхе +6")
+end)
+
+test("окно: подсказки при наведении есть и выключаются", function()
+  local st = setup({ gui = true, tracks = 4 })
+  st.run(0.4)
+  no_errors(st)
+  local has = false
+  for _, t in ipairs(st.gui_tips or {}) do if t == "Pan. Bottom knob." then has = true end end
+  check(has, "подсказка про pan есть")
+  local off = setup({ gui = true, tracks = 4, cfg = "return { tooltips = false }" })
+  off.run(0.4)
+  no_errors(off)
+  local n = 0
+  for _, t in ipairs(off.gui_tips or {}) do if t == "Pan. Bottom knob." then n = n + 1 end end
+  check(n == 0, "при tooltips = false подсказок на полосах нет")
+end)
+
+test("окно: вкладка Help со списком комбинаций", function()
+  local st = setup({ gui = true, tracks = 4 })
+  st.run(0.4)
+  no_errors(st)
+  local found = false
+  for _, t in ipairs(st.gui_texts or {}) do if t == "Hold Bank Right + Mute" then found = true end end
+  check(found, "в Help есть комбинация мастера")
+end)
+
+test("окно: вид MPC рисуется без ошибок, в том числе с панорамой, посылом и мастером", function()
+  local st = setup({ gui = true, tracks = 5, cfg = "return { mixer_style = \"mpc\" }", before = function(s)
+    s.tracks[1].I_SELECTED = 1
+    s.tracks[2].D_PAN = -0.5
+  end })
+  st.peak = { [st.tracks[1].name] = 0.6, [st.tracks[2].name] = 1.4 }
+  st.run(0.6)
+  no_errors(st)
+  local m, master = false, false
+  for _, t in ipairs(st.gui_texts or {}) do if t == "MASTER" then master = true end end
+  check(master, "в виде MPC есть мастер")
+  local narrow = false   -- узкие метры 6 px
+  for _, r in ipairs(st.gui_rects or {}) do if r.x2 - r.x1 == 6 then narrow = true end end
+  check(narrow, "тонкие метры MPC нарисованы")
+  -- переключение стиля из окна на ходу
+  local live = setup({ gui = true, tracks = 3 })
+  live.gui_set = { ["Mixer look##mixer_style"] = 1 }
+  live.run(0.3); live.gui_set = nil; live.run(0.3)
+  no_errors(live)
+  check(live.ext and live.ext["MidiMixLua_settings/mixer_style"] == "mpc", "стиль MPC сохранён в настройках")
+end)
+
+test("окно: русский язык, шрифт подключается и снимается", function()
+  local st = setup({ gui = true, tracks = 3, cfg = "return { language = \"ru\" }" })
+  st.run(0.5)
+  no_errors(st)
+  local function has(str) for _, t in ipairs(st.gui_texts or {}) do if t == str then return true end end return false end
+  check(has("МАСТЕР"), "МАСТЕР вместо MASTER")
+  check(has("Hold Bank Right + Mute") == false and has("Держать Bank Right + Mute"), "в Help русские комбинации")
+  check((st.font_created or 0) >= 1, "шрифт с кириллицей создан")
+  check((st.font_push or 0) > 0 and st.font_push == st.font_pop, "шрифт ставится и снимается поровну (" .. tostring(st.font_push) .. "/" .. tostring(st.font_pop) .. ")")
+  local en = setup({ gui = true, tracks = 3 })
+  en.run(0.4)
+  check((en.font_created or 0) == 0, "в английском шрифт не трогаем")
+end)
+
 print(string.format("\nИтого: %d проверок прошло, %d провалено", passes, fails))
 return fails
