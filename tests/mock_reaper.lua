@@ -206,6 +206,21 @@ function M.new(opts)
               st.gui_texts = st.gui_texts or {}
               st.gui_texts[#st.gui_texts + 1] = select(5, ...)
             end
+            if name == "ImGui_DrawList_AddLine" then
+              st.gui_lines = st.gui_lines or {}
+              st.gui_lines[#st.gui_lines + 1] = { y1 = select(3, ...), y2 = select(5, ...), col = select(6, ...), th = select(7, ...) }
+            end
+            if name == "ImGui_TextColored" or name == "ImGui_Text" then
+              st.gui_texts = st.gui_texts or {}
+              st.gui_texts[#st.gui_texts + 1] = select(name == "ImGui_Text" and 2 or 3, ...)
+            end
+            if name == "ImGui_SetItemTooltip" then
+              st.gui_tips = st.gui_tips or {}
+              st.gui_tips[#st.gui_tips + 1] = select(2, ...)
+            end
+            if name == "ImGui_CreateFont" then st.font_created = (st.font_created or 0) + 1; return "font" end
+            if name == "ImGui_PushFont" then st.font_push = (st.font_push or 0) + 1 end
+            if name == "ImGui_PopFont" then st.font_pop = (st.font_pop or 0) + 1 end
             if name == "ImGui_Combo" then
               local id = select(2, ...)
               if st.gui_set and st.gui_set[id] ~= nil then return true, st.gui_set[id] end
