@@ -1085,13 +1085,13 @@ test("окно: подсказки при наведении есть и вык�
   st.run(0.4)
   no_errors(st)
   local has = false
-  for _, t in ipairs(st.gui_tips or {}) do if t == "Pan. Bottom knob." then has = true end end
+  for _, t in ipairs(st.gui_tips or {}) do if t == "Pan (bottom knob)." then has = true end end
   check(has, "подсказка про pan есть")
   local off = setup({ gui = true, tracks = 4, cfg = "return { tooltips = false }" })
   off.run(0.4)
   no_errors(off)
   local n = 0
-  for _, t in ipairs(off.gui_tips or {}) do if t == "Pan. Bottom knob." then n = n + 1 end end
+  for _, t in ipairs(off.gui_tips or {}) do if t == "Pan (bottom knob)." then n = n + 1 end end
   check(n == 0, "при tooltips = false подсказок на полосах нет")
 end)
 
