@@ -303,7 +303,7 @@ function draw_strip(dl, x, y, i, tr)
   R.ImGui_SetCursorScreenPos(ctx, x, y + 3)
   if R.ImGui_InvisibleButton(ctx, "type" .. i, W, 22) then cycle_type(i) end
   if R.ImGui_SetItemTooltip then
-    R.ImGui_SetItemTooltip(ctx, L(tinfo[1]) .. L(S.manual[i] and " (set by hand)" or " (automatic)") .. L(" - click to change"))
+    R.ImGui_SetItemTooltip(ctx, L(tinfo[1]) .. L(S.manual[i] and " (set by hand)" or " (automatic)") .. L(". Click to change."))
   end
 
   if ty == "separator" then   -- never controlled
@@ -360,11 +360,11 @@ function draw_strip(dl, x, y, i, tr)
     centered(fx + fw / 2, y + 330, on and text_on(flags[f][3]) or C.dim, flags[f][1])
   end
 
-  tip_zone("tp_pan" .. i, ix, y + 53, inner, 14, "Pan. Bottom knob.")
-  tip_zone("tp_wid" .. i, ix, y + 70, inner, 12, "Width. Middle knob. Works only on tracks in stereo pan mode.")
-  tip_zone("tp_snd" .. i, ix, y + 86, inner, 30, "Send level. Top knob. Hold Rec + tap Send All = next send of this track.")
-  tip_zone("tp_vol" .. i, ix, y + 124, inner, 200, "Volume. Fader. Move the fader to the shown level first, then it takes over (pickup).")
-  local tips = { "Mute. Mute button.", "Solo. Hold Solo + the strip's Mute.", REC_MODES[S.rec_mode].label .. ". Rec button, acts on release." }
+  tip_zone("tp_pan" .. i, ix, y + 53, inner, 14, "Pan (bottom knob).")
+  tip_zone("tp_wid" .. i, ix, y + 70, inner, 12, "Width (middle knob). Only works on tracks in stereo pan mode.")
+  tip_zone("tp_snd" .. i, ix, y + 86, inner, 30, "Send level (top knob). Hold Rec and tap Send All for this track's next send.")
+  tip_zone("tp_vol" .. i, ix, y + 124, inner, 200, "Volume (fader). Move the fader to the level shown here and it takes over.")
+  local tips = { "Mute the track.", "Hold Solo and press this strip's Mute to solo the track.", REC_MODES[S.rec_mode].label .. ". Rec button, acts on release." }
   for f = 1, 3 do tip_zone("tp_f" .. f .. "_" .. i, ix + (f - 1) * (fw + 4), y + 326, fw, 22, tips[f]) end
   label(ix, y + 354, tinfo[2], L(tinfo[1]) .. (S.manual[i] and "*" or ""))
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
@@ -404,10 +404,10 @@ function draw_master(dl, x, y)
     local tw = R.ImGui_CalcTextSize(ctx, flag[1])
     R.ImGui_DrawList_AddText(dl, fx + fw / 2 - tw / 2, y + 330, flag[2] and text_on(flag[3]) or C.dim, flag[1])
   end
-  tip_zone("tp_mpan", ix, y + 53, inner, 14, "Master pan. Hold Bank Right + a bottom knob.")
-  tip_zone("tp_mvol", ix, y + 124, inner, 200, "Master volume. Master fader.")
-  tip_zone("tp_mm", ix, y + 326, fw, 22, "Master mute. Hold Bank Right + Mute.")
-  tip_zone("tp_ms", ix + fw + 4, y + 326, fw, 22, "Master solo. Hold Bank Right + Solo.")
+  tip_zone("tp_mpan", ix, y + 53, inner, 14, "Master pan: hold Bank Right and turn a bottom knob.")
+  tip_zone("tp_mvol", ix, y + 124, inner, 200, "Master volume (Master fader).")
+  tip_zone("tp_mm", ix, y + 326, fw, 22, "Master mute: hold Bank Right and press Mute.")
+  tip_zone("tp_ms", ix + fw + 4, y + 326, fw, 22, "Master solo: hold Bank Right and press Solo.")
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
 end
 
@@ -533,7 +533,7 @@ function draw_strip_mpc(dl, x, y, i, tr)
   R.ImGui_SetCursorScreenPos(ctx, x, y + 3)
   if R.ImGui_InvisibleButton(ctx, "type" .. i, W, 22) then cycle_type(i) end
   if R.ImGui_SetItemTooltip then
-    R.ImGui_SetItemTooltip(ctx, L(tinfo[1]) .. L(S.manual[i] and " (set by hand)" or " (automatic)") .. L(" - click to change"))
+    R.ImGui_SetItemTooltip(ctx, L(tinfo[1]) .. L(S.manual[i] and " (set by hand)" or " (automatic)") .. L(". Click to change."))
   end
   if ty == "separator" then
     centered(x + W / 2, y + H / 2 - 6, C.dim, L("not controlled"))
@@ -561,14 +561,14 @@ function draw_strip_mpc(dl, x, y, i, tr)
   end
   draw_fader_mpc(dl, ix, inner, y, tr, false, now)
   draw_flags_mpc(dl, ix, inner, y, {
-    { "M", info(tr, "B_MUTE") ~= 0, C.m_on, "Mute. Mute button." },
-    { "S", info(tr, "I_SOLO") ~= 0, C.s_on, "Solo. Hold Solo + the strip's Mute." },
+    { "M", info(tr, "B_MUTE") ~= 0, C.m_on, "Mute the track." },
+    { "S", info(tr, "I_SOLO") ~= 0, C.s_on, "Hold Solo and press this strip's Mute to solo the track." },
     { REC_MODES[S.rec_mode].letter, rec_state(tr), C.r_on, REC_MODES[S.rec_mode].label .. ". Rec button, acts on release." },
   }, "f" .. i .. "_")
-  tip_zone("tp_pan" .. i, kx1 - kr, ky - kr, 2 * kr, 2 * kr + 14, "Pan. Bottom knob.")
-  tip_zone("tp_snd" .. i, kx2 - kr, ky - kr, 2 * kr, 2 * kr + 14, "Send level. Top knob. Hold Rec + tap Send All = next send of this track.")
-  tip_zone("tp_wid" .. i, ix, y + 112, inner, 13, "Width. Middle knob. Works only on tracks in stereo pan mode.")
-  tip_zone("tp_vol" .. i, ix, y + 128, inner, 170, "Volume. Fader. Move the fader to the shown level first, then it takes over (pickup).")
+  tip_zone("tp_pan" .. i, kx1 - kr, ky - kr, 2 * kr, 2 * kr + 14, "Pan (bottom knob).")
+  tip_zone("tp_snd" .. i, kx2 - kr, ky - kr, 2 * kr, 2 * kr + 14, "Send level (top knob). Hold Rec and tap Send All for this track's next send.")
+  tip_zone("tp_wid" .. i, ix, y + 112, inner, 13, "Width (middle knob). Only works on tracks in stereo pan mode.")
+  tip_zone("tp_vol" .. i, ix, y + 128, inner, 170, "Volume (fader). Move the fader to the level shown here and it takes over.")
   label(ix, y + 354, tinfo[2], L(tinfo[1]) .. (S.manual[i] and "*" or ""))
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
 end
@@ -592,11 +592,11 @@ function draw_master_mpc(dl, x, y)
   R.ImGui_DrawList_AddText(dl, kx - R.ImGui_CalcTextSize(ctx, pt) / 2, ky + kr + 3, C.text, pt)
   draw_fader_mpc(dl, ix, inner, y, tr, true, R.time_precise())
   draw_flags_mpc(dl, ix, inner, y, {
-    { "M", info(tr, "B_MUTE") ~= 0, C.m_on, "Master mute. Hold Bank Right + Mute." },
-    { "S", info(tr, "I_SOLO") ~= 0, C.s_on, "Master solo. Hold Bank Right + Solo." },
+    { "M", info(tr, "B_MUTE") ~= 0, C.m_on, "Master mute: hold Bank Right and press Mute." },
+    { "S", info(tr, "I_SOLO") ~= 0, C.s_on, "Master solo: hold Bank Right and press Solo." },
   }, "m")
-  tip_zone("tp_mpan", kx - kr, ky - kr, 2 * kr, 2 * kr + 14, "Master pan. Hold Bank Right + a bottom knob.")
-  tip_zone("tp_mvol", ix, y + 128, inner, 170, "Master volume. Master fader.")
+  tip_zone("tp_mpan", kx - kr, ky - kr, 2 * kr, 2 * kr + 14, "Master pan: hold Bank Right and turn a bottom knob.")
+  tip_zone("tp_mvol", ix, y + 128, inner, 170, "Master volume (Master fader).")
   R.ImGui_DrawList_AddRect(dl, x, y, x + W, y + H, C.sep, 0, 0, 2)
 end
 
@@ -677,7 +677,7 @@ function draw_instrument()
   if R.ImGui_Button(ctx, L("Clear all") .. "##clearall") then
     for _, row in ipairs(ROWS) do for i = 1, 8 do if S.binds[row .. i] then clear_bind(row .. i) end end end
   end
-  R.ImGui_TextColored(ctx, C.dim, L("Click a cell, then touch a plugin parameter. x = forget. On the device: hold Solo and turn a knob = forget it. Mute = plugin window, Rec = select the track."))
+  R.ImGui_TextColored(ctx, C.dim, L("Click a cell, then touch a plugin parameter. Click x to forget a mapping, or hold Solo and turn its knob on the device. Mute opens the plugin window, Rec selects the track."))
 end
 
 function draw_settings()
@@ -789,14 +789,14 @@ end
 -- Help tab: what every control does
 HELP = {
   { "Basics", {
-    { "Faders", "Track volume (the Master fader = master volume)" },
+    { "Faders", "Track volume (the Master fader sets the master volume)" },
     { "Bottom knobs", "Pan" },
     { "Middle knobs", "Width (only on tracks in stereo pan mode)" },
     { "Top knobs", "Send level (the send shown in the window)" },
     { "Mute", "Mute the track" },
     { "Rec", "Rec arm, send mute or FX bypass (Rec row mode), acts on release" },
     { "Hold Solo + Mute", "Solo that track" },
-    { "Solo, short tap", "Solo the whole bank (tap again = back as it was)" },
+    { "Solo, short tap", "Solo the whole bank (tap again to restore)" },
     { "Solo + any Rec", "Apply Rec to the whole bank" },
     { "Solo + Send All", "Clear all solo" },
   } },
@@ -817,7 +817,7 @@ HELP = {
     { "Send All, single tap", "Instrument mode on / off (when 'Send All tap = next send of ALL tracks' is off)" },
   } },
   { "Instrument mode", {
-    { "Instrument tab: click a cell", "Then touch a plugin parameter = mapped" },
+    { "Instrument tab: click a cell", "Then touch a plugin parameter to map it" },
     { "Mute (a strip)", "Open / close that strip's plugin window" },
     { "Rec (a strip)", "Select the track" },
     { "Both Bank buttons", "Play / stop" },
