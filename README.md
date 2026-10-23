@@ -93,7 +93,7 @@ If a button or LED does not do what you expect, run **AKAI MidiMix probe**. It l
 | Master mute / solo / pan | Hold Bank Right + Mute / Solo / bottom knob |
 | Next send of one track | Hold its Rec, tap Send All |
 | Pause / resume | Send All, double tap |
-| Change the Rec row job | Solo, double tap |
+| Change the Rec row job | Solo, double tap (the second tap also puts the bank's solo state back) |
 | Instrument mode on / off | Send All, single tap |
 
 The same list is in the **Help** tab of the window.

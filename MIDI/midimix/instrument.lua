@@ -132,10 +132,16 @@ function learn_tick(now)
   dbg("learned", bk, S.binds[bk].tguid, S.binds[bk].fguid, pn)
 end
 
+-- is the plugin's floating window open? (REAPER gives nil or 0 when there is none, depending on the API version)
+function fx_window_open(tr, fx)
+  local w = R.TrackFX_GetFloatingWindow(tr, fx)
+  return w ~= nil and w ~= false and w ~= 0
+end
+
 function inst_mute(i)
   local b = strip_main_bind(i)
   if not b then return end
-  if R.TrackFX_GetFloatingWindow(b.tr, b.fx) then R.TrackFX_Show(b.tr, b.fx, 2) else R.TrackFX_Show(b.tr, b.fx, 3) end
+  if fx_window_open(b.tr, b.fx) then R.TrackFX_Show(b.tr, b.fx, 2) else R.TrackFX_Show(b.tr, b.fx, 3) end
 end
 function inst_rec(i)
   local b = strip_main_bind(i)

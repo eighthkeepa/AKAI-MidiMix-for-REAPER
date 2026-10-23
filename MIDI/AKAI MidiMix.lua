@@ -106,11 +106,12 @@ local function exit_blink()
   if not CFG.exit_blink or S.out_idx == nil or not S.device_ok then return end
   local m, notes = CFG.map, {}
   for i = 1, 8 do notes[#notes + 1] = m.mute[i]; notes[#notes + 1] = m.rec[i] end
+  local phase = math.min(CFG.exit_blink_s, 0.25)   -- REAPER waits here, so keep it short
   for _ = 1, 2 do
     for _, n in ipairs(notes) do led_set(n, true, true) end
-    wait(CFG.exit_blink_s)
+    wait(phase)
     for _, n in ipairs(notes) do led_set(n, false, true) end
-    wait(CFG.exit_blink_s)
+    wait(phase)
   end
 end
 

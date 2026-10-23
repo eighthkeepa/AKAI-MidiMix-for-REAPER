@@ -433,9 +433,8 @@ function next_page()
 end
 
 -- Next send of ONE track (strip number), independent of the other tracks.
-function next_track_send(strip)
-  local tr = S.strips[strip]
-  if not tr then return end
+function next_track_send(tr)
+  if not valid(tr) then return end
   local n = R.GetTrackNumSends(tr, 0)
   if n == 0 then return end
   local cur = send_index(tr)
@@ -458,7 +457,7 @@ function toggle_enabled(why)
   dbg("toggle_enabled:", why or "?", "->", not S.enabled)
   S.enabled = not S.enabled
   S.solo_held, S.solo_used = false, false
-  S.rec_held, S.rec_used = nil, false
+  S.rec_held, S.rec_used, S.rec_tr = nil, false, nil
   S.bank_down = { [-1] = false, [1] = false }
   S.bank_used = { [-1] = false, [1] = false }
   reset_picks()
