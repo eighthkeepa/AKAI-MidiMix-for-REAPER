@@ -8,7 +8,7 @@
 function sendall_short()
   if not S.enabled then return end
   if S.rec_held then
-    next_track_send(S.rec_held)
+    next_track_send(S.rec_tr)
     S.rec_used = true
   elseif S.solo_held then
     if S.mode == "instrument" then R.CSurf_GoStart() else clear_all_solo() end
@@ -75,16 +75,17 @@ function on_note(note, down, now)
       elseif CFG.track_sends and S.strips[b.strip] then
         -- the arm toggle happens on release, unless Send All was used while held
         S.rec_held, S.rec_used = b.strip, false
+        S.rec_tr = S.strips[b.strip]        -- the bank may move while Rec is held: keep the track itself
       else
         local tr = S.strips[b.strip]
         if tr then rec_toggle(tr) end
       end
     elseif S.rec_held == b.strip then
       if not S.rec_used then
-        local tr = S.strips[b.strip]
-        if tr then rec_toggle(tr) end
+        local tr = S.rec_tr
+        if valid(tr) then rec_toggle(tr) end
       end
-      S.rec_held = nil
+      S.rec_held, S.rec_tr = nil, nil
     end
   elseif b.kind == "solo" then
     if down then
@@ -137,7 +138,7 @@ end
 function on_sendall_burst(now)
   -- fallback if Send All does not send its own note
   if S.rec_held and S.enabled then
-    next_track_send(S.rec_held)
+    next_track_send(S.rec_tr)
     S.rec_used = true
     return
   end
@@ -307,7 +308,7 @@ function update_leds(now)
         if S.mode == "instrument" then
           local b = strip_main_bind(i)
           if b then
-            mu = R.TrackFX_GetFloatingWindow(b.tr, b.fx) ~= nil
+            mu = fx_window_open(b.tr, b.fx)
             re = info(b.tr, "I_SELECTED") ~= 0
           end
           if S.learn_key and tonumber(S.learn_key:match("%d+$")) == i then mu = blink end

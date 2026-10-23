@@ -1140,5 +1140,77 @@ test("окно: русский язык, шрифт подключается и 
   check((en.font_created or 0) == 0, "в английском шрифт не трогаем")
 end)
 
+test("Rec зажат, банк сдвинулся: посыл и Rec остаются у нажатого трека", function()
+  local st = setup({
+    cfg = "return { send_all_note = 28, track_sends = true }",
+    before = function(s)
+      local bus1 = s.add_track("Reverb")
+      local bus2 = s.add_track("Delay")
+      s.add_send(s.tracks[2], bus1, 1); s.add_send(s.tracks[2], bus2, 1)
+    end,
+  })
+  local zero = math.floor(step_for_gain(1))
+  st.note_on(REC[2]); st.run(0.06)
+  press(st, BR); st.run(0.1)                       -- банк уехал на T9.., Rec ещё зажат
+  press(st, SENDALL)
+  st.note_off(REC[2]); st.run(0.06)
+  check(st.tracks[10].I_RECARM == 0, "трек 10 (новая вторая полоса) не взведён")
+  press(st, BL); st.run(0.2)
+  st.cc(TOP[2], zero); st.run(0.1); st.cc(TOP[2], zero - 30); st.run(0.1)
+  check(st.tracks[2].sends[2].D_VOL < 1 and st.tracks[2].sends[1].D_VOL == 1, "посыл переключён у T2, а не у соседа")
+  no_errors(st)
+end)
+
+test("Rec зажат и отпущен после сдвига банка: взводится нажатый трек", function()
+  local st = setup({ cfg = "return { track_sends = true }" })
+  st.note_on(REC[2]); st.run(0.06)
+  press(st, BR); st.run(0.1)
+  st.note_off(REC[2]); st.run(0.1)
+  check(st.tracks[2].I_RECARM == 1, "взведён T2, на который нажали")
+  check(st.tracks[10].I_RECARM == 0, "T10 не тронут")
+  no_errors(st)
+end)
+
+test("окно плагина: API вернул 0, окно закрыто, диод Mute не горит, Mute открывает", function()
+  local st = setup({ gui = true, tracks = 4, cfg = "return { send_all_note = 28 }", before = function(s)
+    s.tracks[2].fxlist = { { guid = "{FX1}", name = "Dexed", params = { { name = "Cutoff", val = 0.2 }, { name = "Res", val = 0.5 } } } }
+  end })
+  local R = _G.reaper
+  local orig = R.TrackFX_GetFloatingWindow
+  R.TrackFX_GetFloatingWindow = function(t, k) return orig(t, k) or 0 end   -- как у части версий REAPER
+  press(st, SENDALL); st.run(0.9)
+  st.gui_set = { ["Learn mode (turn a knob, then touch a parameter)##learn"] = true }
+  st.run(0.1); st.gui_set = nil; st.run(0.1)
+  st.cc(TOP[1], 10); st.run(0.05); st.cc(TOP[1], 12); st.run(0.1)
+  st.touched = { 2, 0, 1 }; st.run(0.3)
+  check(st.led(MUTE[1]) == 0, "окно закрыто: диод Mute не горит")
+  press(st, MUTE[1]); st.run(0.1)
+  check(st.tracks[2].fxlist[1].window == true, "Mute открыл окно")
+  press(st, MUTE[1]); st.run(0.1)
+  check(st.tracks[2].fxlist[1].window == false, "Mute закрыл окно")
+  no_errors(st)
+end)
+
+test("окно: время удержания Bank в подсказке берётся из настроек", function()
+  local st = setup({ gui = true, tracks = 4, cfg = "return { bank_hold_s = 1.5 }" })
+  st.run(0.4)
+  local found
+  for _, t in ipairs(st.gui_texts or {}) do if t == "Hold Bank 1.5 s, release" then found = true end end
+  check(found, "в Help: Hold Bank 1.5 s")
+  local ru = setup({ gui = true, tracks = 4, cfg = "return { language = 'ru', bank_hold_s = 1.5 }" })
+  ru.run(0.4)
+  found = false
+  for _, t in ipairs(ru.gui_texts or {}) do if t == "Держать Bank 1,5 с и отпустить" then found = true end end
+  check(found, "в Help по-русски: 1,5 с")
+end)
+
+test("значения из midimix_config.lua: тайминги ограничены", function()
+  local st = setup({ cfg = "return { burst_window = 0, hold_s = 0, exit_blink_s = 5 }" })
+  st.run(0.3)
+  no_errors(st)
+  st.exit()   -- мигание на выходе не должно висеть секундами
+  check(true, "выход прошёл")
+end)
+
 print(string.format("\nИтого: %d проверок прошло, %d провалено", passes, fails))
 return fails

@@ -802,7 +802,7 @@ HELP = {
   } },
   { "Banks", {
     { "Bank Left / Bank Right", "Previous / next bank" },
-    { "Hold Bank 0.5 s, release", "Jump to the first / last bank" },
+    { "Hold Bank %s s, release", "Jump to the first / last bank" },
     { "Solo + Bank", "Move the bank by one track" },
   } },
   { "Master", {
@@ -836,7 +836,13 @@ function draw_help(width)
   for _, sec in ipairs(HELP) do
     R.ImGui_TextColored(ctx, C.head, L(sec[1]))
     for _, row in ipairs(sec[2]) do
-      R.ImGui_Text(ctx, L(row[1]))
+      local title = L(row[1])
+      if title:find("%s", 1, true) then   -- the Bank hold time comes from the settings
+        local sec = string.format("%g", CFG.bank_hold_s)
+        if CFG.language == "ru" then sec = sec:gsub("%.", ",") end
+        title = title:format(sec)
+      end
+      R.ImGui_Text(ctx, title)
       R.ImGui_SameLine(ctx, col2)
       R.ImGui_TextColored(ctx, C.dim, L(row[2]))
     end
@@ -931,6 +937,7 @@ function draw_gui()
 
       if R.ImGui_BeginTabBar(ctx, "tabs") then
         if R.ImGui_BeginTabItem(ctx, L("Mixer") .. "##tabmixer") then
+         local okx, errx = pcall(function()
           local sx, sy = R.ImGui_GetCursorScreenPos(ctx)
           local dl = R.ImGui_GetWindowDrawList(ctx)
           update_folders(R.time_precise())
@@ -958,7 +965,9 @@ function draw_gui()
           end
           R.ImGui_SetCursorScreenPos(ctx, sx, sy)
           R.ImGui_Dummy(ctx, CFG.bank_size * (sw + G.GAP) + G.PAD + sw, G.H + 24)
-          R.ImGui_EndTabItem(ctx)
+         end)
+          R.ImGui_EndTabItem(ctx)   -- always close the tab, even after an error
+          if not okx then error(errx, 0) end
         end
         if R.ImGui_BeginTabItem(ctx, L("Help") .. "##tabhelp") then
           local okh, errh = pcall(draw_help, CFG.bank_size * (SW() + G.GAP) + G.PAD + SW())

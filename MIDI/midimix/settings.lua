@@ -131,6 +131,12 @@ do
 end
 
 CFG.bank_size = math.max(1, math.min(8, math.floor(CFG.bank_size)))
+-- values from midimix_config.lua: keep the timings in a sensible range
+for key, lo, hi in ([[hold_s 0.3 5  bank_hold_s 0.2 2  double_tap_s 0.2 1  burst_window 0.05 1  burst_min 5 33
+  exit_blink_s 0.02 0.25  startup_step_s 0.02 0.5  led_refresh_s 1 60]]):gmatch("(%S+)%s+(%S+)%s+(%S+)") do
+  local v = tonumber(CFG[key])
+  if v then CFG[key] = math.max(tonumber(lo), math.min(tonumber(hi), v)) end
+end
 
 ---------------------------------------------------------------------------
 -- SETTINGS SCREEN: schema + persistence (REAPER ExtState)
@@ -227,7 +233,7 @@ S = {
   burst_t0 = -100, burst_seen = {}, burst_cnt = 0, burst_fired = false,
   last_tap = -100, pending_page_at = nil,
   send_page = 1, page_count = 1, page_names = {}, flash_until = 0, flash_page = 1,
-  tsend = {}, rec_held = nil, rec_used = false, anim = nil,
+  tsend = {}, rec_held = nil, rec_tr = nil, rec_used = false, anim = nil,
   led = {}, led_t = -100,
   sp_owned = {}, sp_dirty = true, sp_checked = false,
   mode = "mixer", binds = {}, bind_res = {}, learn_key = nil, learn_mode = false, mode_flash = nil, binds_proj = nil,

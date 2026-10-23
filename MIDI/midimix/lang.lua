@@ -64,7 +64,7 @@ RU = {
   ["Solo, short tap"] = "Solo, коротко",   ["Solo + any Rec"] = "Solo + любая Rec", ["Apply Rec to the whole bank"] = "Применить Rec ко всему банку",
   ["Solo + Send All"] = "Solo + Send All", ["Clear all solo"] = "Снять все соло",
   ["Bank Left / Bank Right"] = "Bank Left / Bank Right", ["Previous / next bank"] = "Предыдущий / следующий банк",
-  ["Hold Bank 0.5 s, release"] = "Держать Bank 0,5 с и отпустить", ["Jump to the first / last bank"] = "Прыжок в первый / последний банк",
+  ["Hold Bank %s s, release"] = "Держать Bank %s с и отпустить", ["Jump to the first / last bank"] = "Прыжок в первый / последний банк",
   ["Solo + Bank"] = "Solo + Bank", ["Move the bank by one track"] = "Сдвинуть банк на одну дорожку",
   ["Hold Bank Right + Mute"] = "Держать Bank Right + Mute", ["Mute the master"] = "Mute мастера",
   ["Hold Bank Right + Solo"] = "Держать Bank Right + Solo", ["Solo the master"] = "Solo мастера",

@@ -77,19 +77,25 @@ function update_markers(now)
   local bot_ok = bot and bot.for_g == g2 and track_index0(bot.tr) == index_after(last)
   if top_ok and bot_ok then return end
   if now - S.sig_t < 0.3 then return end          -- the bank is still moving
-  remove_marker("top"); remove_marker("bottom")
-  first, last = S.slots[1], nil
-  for i = 1, CFG.bank_size do if S.slots[i] then last = S.slots[i] end end
-  if not (first and last) then return end
-  -- bottom first, so the index of the top one does not move
-  local bi = index_after(last)
-  local btr = make_marker("bottom", bi, "MidiMix \u{25B2}")
-  if btr then S.markers.bottom = { tr = btr, for_g = guid(last) } end
-  local ti = track_index0(first)
-  local ttr = make_marker("top", ti, "MidiMix \u{25BC}")
-  if ttr then S.markers.top = { tr = ttr, for_g = guid(first) } end
-  R.TrackList_AdjustWindows(false)
-  S.sp_dirty = true
+  -- one UI refresh for the whole change instead of one per track
+  if R.PreventUIRefresh then R.PreventUIRefresh(1) end
+  local okm, errm = pcall(function()
+    remove_marker("top"); remove_marker("bottom")
+    local f, l = S.slots[1], nil
+    for i = 1, CFG.bank_size do if S.slots[i] then l = S.slots[i] end end
+    if not (f and l) then return end
+    -- bottom first, so the index of the top one does not move
+    local bi = index_after(l)
+    local btr = make_marker("bottom", bi, "MidiMix \u{25B2}")
+    if btr then S.markers.bottom = { tr = btr, for_g = guid(l) } end
+    local ti = track_index0(f)
+    local ttr = make_marker("top", ti, "MidiMix \u{25BC}")
+    if ttr then S.markers.top = { tr = ttr, for_g = guid(f) } end
+    R.TrackList_AdjustWindows(false)
+    S.sp_dirty = true
+  end)
+  if R.PreventUIRefresh then R.PreventUIRefresh(-1) end
+  if not okm then error(errm, 0) end
 end
 
 -- tint the tracks of the bank; the original colour is kept in the track (P_EXT) and restored
@@ -113,6 +119,8 @@ function update_colors(now)
   for g in pairs(S.tinted) do if not want[g] then restore_color(g) end end
   local col, a = CFG.marker_color, clamp(CFG.highlight_tint, 0, 1)
   for g, tr in pairs(want) do
+    local t = S.tinted[g]
+    if t and (t.a ~= a or t.c1 ~= col[1] or t.c2 ~= col[2] or t.c3 ~= col[3]) then restore_color(g) end  -- strength or colour changed
     if not S.tinted[g] then
       local orig = info(tr, "I_CUSTOMCOLOR")
       local r0, g0, b0 = 96, 96, 96                  -- tracks without their own colour: start from grey
@@ -123,7 +131,7 @@ function update_colors(now)
       local new = R.ColorToNative(nr, ng, nb) | 0x1000000
       tag_set(tr, "midimix_origcolor", tostring(math.floor(orig)))
       set_info(tr, "I_CUSTOMCOLOR", new)
-      S.tinted[g] = { tr = tr, orig = orig, set = new }
+      S.tinted[g] = { tr = tr, orig = orig, set = new, a = a, c1 = col[1], c2 = col[2], c3 = col[3] }
       R.TrackList_AdjustWindows(false)
     end
   end
@@ -133,9 +141,7 @@ function follow_mixer_scroll(now)
   if not CFG.follow_mixer or not R.GetMixerScroll or now - (S.scroll_poll or 0) < 0.25 then return end
   S.scroll_poll = now
   local tr = R.GetMixerScroll()
-  if not tr or not R.ValidatePtr2 or not R.ValidatePtr2(0, tr, "MediaTrack*") then
-    if not tr then return end
-  end
+  if not valid(tr) then return end
   local g = guid(tr)
   if g == S.scroll_seen then return end
   S.scroll_seen = g
