@@ -3,108 +3,109 @@
 <h1 align="center">AKAI MidiMix for REAPER</h1>
 
 <p align="center">
-Turn your Akai MIDI Mix into a real REAPER mixer.<br>
-One Lua script. No ReaLearn, no OSC, no extensions.
+Control REAPER with your Akai MIDI Mix.<br>
+One Lua script. No ReaLearn, OSC or extra extensions.
 </p>
+
+## Quick start
+
+### Recommended: install with ReaPack
+1. In REAPER, open Extensions > ReaPack > Import repositories and paste:
+   `https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/main/index.xml`
+2. Open Browse packages, search for “AKAI MidiMix” and install **AKAI MidiMix for REAPER**.
+3. To use the window, install **ReaImGui** through ReaPack too.
+
+### Manual install
+1. In REAPER, choose Options > Show REAPER resource path and open the `Scripts` folder.
+2. Copy the contents of `MIDI/` there: `AKAI MidiMix.lua` and the `midimix/` folder. Keep them together.
+
+### Enable MIDI and start the script
+1. In Preferences > MIDI Devices, enable both input and output for the MIDI Mix. Output is needed for the LEDs.
+2. If a track uses “All MIDI inputs”, change its input so it doesn't receive notes from the MIDI Mix.
+3. Open Actions > Show action list > New action > Load ReaScript, select `AKAI MidiMix.lua` and run it. Add the action to a toolbar if you want a button to start and stop the script.
+
+If a button or LED behaves unexpectedly, run **AKAI MidiMix probe**. It lights the LEDs one at a time and shows the MIDI messages sent by the controller.
 
 <p align="center">
-  <img src="docs/images/mixer-demo.gif" alt="The AKAI MidiMix window: meters and faders moving" width="900">
+  <img src="docs/images/mixer-demo.gif" alt="AKAI MidiMix window with moving meters and faders" width="900">
 </p>
 
-Faders, knobs and buttons control your tracks, and the LEDs on the controller follow what happens in REAPER. A window shows the same mixer on screen, so you always see what the hardware is doing.
+Use the controller's faders, knobs and buttons to control tracks in REAPER. Its LEDs show track states, and the optional window mirrors the mixer layout on screen.
 
-## What you get
+## Mixer controls
 
-**A real mixer on 24 knobs, 9 faders and 24 buttons**
-- Faders set track volume. The top of the fader is +12 dB, like REAPER itself. The Master fader controls the master.
-- Bottom knobs set pan, middle knobs set stereo width, top knobs set send levels.
-- Mute, Solo and Rec arm for every strip.
-- Soft takeover (pickup) everywhere: when you move a control, the value does not jump. Turn the knob until it reaches the current value and it takes over.
-- Banks of up to 8 tracks. Bank Left and Bank Right page through your project, hold one to jump to the first or last bank, and Solo + Bank moves by one track.
+**24 knobs, 9 faders and 24 buttons**
+- Faders control track volume, up to +12 dB. The Master fader controls the master track.
+- The bottom row controls pan, the middle row stereo width, and the top row send levels.
+- Each strip has Mute, Solo and Rec controls.
+- Soft takeover prevents sudden jumps. Turn a knob until it reaches the parameter's current value; it will then take control.
+- Tracks are grouped into banks of up to eight. Bank Left and Bank Right switch banks. Hold either button to jump to the first or last bank. Solo + Bank moves one track at a time.
 
-**Master track on the device**
-Hold Bank Right and press Mute or Solo for the master, or turn any bottom knob for master pan.
+**Master track**
+Hold Bank Right and press Mute or Solo to change the master's state. While holding Bank Right, turn any bottom-row knob to adjust master pan.
 
-**Three jobs for the Rec row**
-The Rec buttons can arm recording, mute the send shown in the window, or bypass the whole FX chain of a track. Double tap Solo to switch.
+**Rec buttons**
+The Rec row can arm tracks, mute the send selected in the window, or bypass a track's entire FX chain. Double-tap Solo to switch between these actions.
 
-**Instrument mode**
-All 24 knobs turn into plugin parameters. Click a cell in the window, touch a parameter in any plugin on any track (or the master), and the knob is mapped. Mappings are saved in your project. Mute opens the plugin window, Rec selects the track.
+**Plugin parameters**
+In Instrument mode, all 24 knobs control plugin parameters. Select a cell in the window, then adjust a parameter in a plugin on any track or on the master. The script assigns it to the knob and saves the mapping in the project. Mute opens the plugin window; Rec selects the track.
 
 **Track types**
-Audio, instrument, bus, VCA, folder and separator are found automatically. You can set a type by hand with one click. Separator tracks are skipped by the controller.
+The script detects audio, instrument, bus, VCA, folder and separator tracks. Change a track's type with one click. Separator tracks are skipped by the controller.
 
-**See your bank in REAPER**
-Mark the tracks you are controlling with spacers, two red marker tracks, or a red tint. Everything the script adds is removed when it stops.
+**Mark the current bank**
+In REAPER, mark the tracks in the current bank with spacers, two red marker tracks or a red tint. The script removes the markers it added when it stops.
 
-**LEDs that tell the truth**
-Mute and Rec follow the state of REAPER. The Bank LEDs show which page you are on and when the script is paused. There is a start-up animation and a blink on exit, and both can be turned off.
+**Controller LEDs**
+Mute and Rec LEDs show track states in REAPER. Bank LEDs show the current bank and indicate when the script is paused. You can turn off the start-up and exit animations.
 
-## The window
+## Mixer window
 
 <p align="center">
-  <img src="docs/images/mixer-classic.png" alt="Classic mixer look" width="48%">
-  <img src="docs/images/mixer-mpc.png" alt="MPC 2.0 mixer look" width="48%">
+  <img src="docs/images/mixer-classic.png" alt="Classic mixer view" width="48%">
+  <img src="docs/images/mixer-mpc.png" alt="MPC 2.0-style mixer view" width="48%">
 </p>
 
-Needs [ReaImGui](https://github.com/cfillion/reaimgui) (optional, the controller works without it).
+The window uses [ReaImGui](https://github.com/cfillion/reaimgui). You don't need to install it unless you want the window; the controller works without it.
 
-- **Two looks.** Classic bars, or an MPC 2.0 style with round knobs. Switch in Settings.
-- Stereo level meters with peak hold. They follow the fader and the pan, so a track panned right shows less on the left.
-- A bright line marks 0 dB. The fader scale follows the fader top you choose.
-- Folder bands over the strips, track colours, and the master strip.
-- **Help tab** with every button combination. Rest the mouse on a pan bar, fader or button for a short hint.
-- **Instrument tab** for mappings, **Settings tab** for everything else.
-- English or Russian. The window title bar is Akai Red.
+- Choose classic fader strips or round knobs in the MPC 2.0 style.
+- Stereo meters hold peak levels and reflect each track's volume and pan.
+- A line marks 0 dB. The fader scale follows the maximum value you set.
+- The window shows folder bands, track colors and the master strip.
+- Help lists the button combinations. Hover over a pan control, fader or button to see a hint.
+- Instrument is where you manage plugin mappings; Settings contains the other options.
+- The interface is available in English and Russian. The title bar uses Akai Red.
 
-## Install
+## Button combinations
 
-**With ReaPack (recommended)**
-1. Extensions > ReaPack > Import repositories, and paste:
-   `https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/main/index.xml`
-2. Browse packages, search for "AKAI MidiMix", install **AKAI MidiMix for REAPER**.
-3. Optional: install **ReaImGui** the same way, for the window.
-
-**By hand**
-1. Options > Show REAPER resource path, open `Scripts`, and copy the contents of the `MIDI/` folder there: `AKAI MidiMix.lua` and the `midimix/` folder next to it.
-
-**Then**
-1. Preferences > MIDI Devices: enable **input and output** for the MIDI Mix (output is needed for the LEDs).
-2. Any track that records from "All MIDI inputs" will get the MIDI Mix notes. Change the input of such tracks.
-3. Actions > Show action list > New action > Load ReaScript > `AKAI MidiMix.lua` > Run. Add it to a toolbar for an on/off button.
-
-If a button or LED does not do what you expect, run **AKAI MidiMix probe**. It lights the LEDs one by one and prints what your device sends.
-
-## Controls
-
-| What | How |
+| Action | How |
 |---|---|
-| Volume | Faders (Master fader = master) |
-| Pan / width / send | Bottom / middle / top knobs |
-| Mute | Mute |
-| Rec arm (or the current Rec row job) | Rec, acts on release |
-| Solo one track | Hold Solo + that strip's Mute |
-| Solo the whole bank | Solo, short tap (tap again to restore) |
-| Rec for the whole bank | Solo + any Rec |
-| Clear all solo | Solo + Send All |
+| Volume | Faders; Master controls the master track |
+| Pan / width / send | Bottom / middle / top row of knobs |
+| Mute a track | Mute |
+| Arm a track or run the current Rec action | Press Rec; it runs when you release the button |
+| Solo one track | Hold Solo and press that strip's Mute |
+| Solo the whole bank | Tap Solo; tap it again to restore the previous state |
+| Arm the whole bank | Solo + any Rec |
+| Clear Solo on all tracks | Solo + Send All |
 | Previous / next bank | Bank Left / Bank Right |
-| First / last bank | Hold Bank Left / Right for half a second, release |
+| First / last bank | Hold Bank Left or Bank Right for half a second, then release |
 | Move by one track | Solo + Bank |
-| Master mute / solo / pan | Hold Bank Right + Mute / Solo / bottom knob |
-| Next send of one track | Hold its Rec, tap Send All |
-| Pause / resume | Send All, double tap |
-| Change the Rec row job | Solo, double tap (the second tap also puts the bank's solo state back) |
-| Instrument mode on / off | Send All, single tap |
+| Master mute / solo / pan | Hold Bank Right and press Mute / Solo, or turn a bottom-row knob |
+| Select the next send for one track | Hold its Rec and tap Send All |
+| Pause / resume | Double-tap Send All |
+| Change the Rec-row action | Double-tap Solo; the second tap also restores the bank's previous Solo state |
+| Turn Instrument mode on or off | Tap Send All once |
 
-The same list is in the **Help** tab of the window.
+The Help tab lists the same combinations.
 
-Send All sends no note, only a burst of CC messages, so it can do tap and double tap but not hold.
+Send All sends a burst of CC messages, not a MIDI note. It can detect single and double taps, but not a hold.
 
-**Off by default:** the script never changes a track's pan mode on its own. If you want it to, turn on "Allow switching tracks to stereo pan from the device" in Settings. Then Solo + middle knob (one track) and both Bank buttons (whole bank) switch to stereo pan. Without it, the width knob only works on tracks that are already in stereo pan mode, and the window shows "width n/a" on the others.
+**Pan mode stays as it is by default.** To let the controller switch tracks to stereo pan, enable “Allow switching tracks to stereo pan from the device” in Settings. Then Solo + a middle-row knob switches one track; pressing Bank Left and Bank Right together switches the whole bank. With the option off, the width knob works only on tracks already in stereo pan mode. The window shows “width n/a” for other tracks.
 
 ## Settings
 
-Everything is in the Settings tab and is saved in REAPER. To keep settings in a file, create `midimix_config.lua` next to the script:
+Settings are saved in REAPER. To keep them in a separate file, create `midimix_config.lua` next to the script:
 
 ```lua
 return {
@@ -113,36 +114,36 @@ return {
   mixer_style = "mpc",     -- classic | mpc
   language = "en",         -- en | ru
   sends_by_name = true,    -- match sends by destination name
-  follow_mixer = true,     -- the bank follows the mixer scroll
+  follow_mixer = true,     -- follow the mixer scroll position
 }
 ```
 
-All options with their defaults are at the top of `midimix/settings.lua`. Values saved from the window win over the file. "Reset to defaults" clears them.
+Default values are listed at the top of `midimix/settings.lua`. Settings saved in the window take precedence over the config file. “Reset to defaults” clears saved settings.
 
-## Good to know
+## Notes
 
-- Only the Mute, Rec and Bank buttons have LEDs. That is how the hardware is built.
-- The script reads MIDI about 30 times a second, so a very fast knob sweep can skip values. Learn mode works best when you turn the knob steadily.
-- Plugin mappings work with FX on tracks and on the master. Item FX and input FX are not supported yet.
-- The LEDs can show send numbers up to 16 per track. Later sends still work, they just are not shown on the controller.
-- The Rec row job is not remembered between runs, it starts as Rec arm.
+- Only Mute, Rec and Bank buttons have LEDs; that's how the controller is built.
+- The script reads MIDI about 30 times per second. Fast knob turns may skip values, so turn steadily when mapping a plugin parameter.
+- Plugin mappings work with track FX and master FX. Item FX and input FX aren't supported yet.
+- The controller can show the first 16 sends on each track. Later sends still work, but their numbers aren't shown.
+- The Rec-row action isn't saved between runs. The buttons start in record-arm mode.
 
 ## For developers
 
 ```
-MIDI/AKAI MidiMix.lua         entry point
+MIDI/AKAI MidiMix.lua         main script
 MIDI/midimix/                 modules: settings, lang, device, tracks, instrument, input, gui, highlight
 MIDI/AKAI MidiMix probe.lua   hardware probe
 tests/                        automated checks: python3 -I tests/run.py   (needs lupa)
-                              README pictures:  python3 -I tests/render_preview.py   (needs lupa, Pillow)
+                              README images:     python3 -I tests/render_preview.py   (needs lupa, Pillow)
 ```
 
-All modules share one environment, so `CFG`, `S` and the helper functions are visible everywhere. Put new code in the module it belongs to. The ReaPack tags (`@version`, `@provides`, `@changelog`) are at the top of the main script.
+All modules share one environment, so `CFG`, `S` and helper functions are available throughout. Add new code to the relevant module. ReaPack tags (`@version`, `@provides`, `@changelog`) are at the top of the main script.
 
 ## Credits
 
-Idea, hardware testing and decisions: The Eighth. Most of the code was written together with [Claude](https://claude.ai) (Anthropic).
+Project idea, hardware testing and design decisions: The Eighth.
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](LICENSE).
+GPL-3.0-or-later. See [LICENSE](LICENSE).
