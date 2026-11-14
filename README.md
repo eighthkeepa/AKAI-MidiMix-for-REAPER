@@ -7,6 +7,10 @@ Control REAPER with your Akai MIDI Mix.<br>
 One Lua script. No ReaLearn, OSC or extra extensions.
 </p>
 
+<p align="center">
+  <img src="docs/images/mixer-demo.gif" alt="AKAI MidiMix window with moving meters and faders" width="900">
+</p>
+
 ## Quick start
 
 ### Recommended: install with ReaPack
@@ -25,10 +29,6 @@ One Lua script. No ReaLearn, OSC or extra extensions.
 3. Open Actions > Show action list > New action > Load ReaScript, select `AKAI MidiMix.lua` and run it. Add the action to a toolbar if you want a button to start and stop the script.
 
 If a button or LED behaves unexpectedly, run **AKAI MidiMix probe**. It lights the LEDs one at a time and shows the MIDI messages sent by the controller.
-
-<p align="center">
-  <img src="docs/images/mixer-demo.gif" alt="AKAI MidiMix window with moving meters and faders" width="900">
-</p>
 
 Use the controller's faders, knobs and buttons to control tracks in REAPER. Its LEDs show track states, and the optional window mirrors the mixer layout on screen.
 
