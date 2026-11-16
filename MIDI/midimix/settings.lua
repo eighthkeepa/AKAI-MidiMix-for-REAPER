@@ -237,7 +237,7 @@ S = {
   led = {}, led_t = -100,
   sp_owned = {}, sp_dirty = true, sp_checked = false,
   mode = "mixer", binds = {}, bind_res = {}, learn_key = nil, learn_mode = false, mode_flash = nil, binds_proj = nil,
-  meters = {}, markers = {}, tinted = {}, tint_full = false, sig_t = -100,
+  meters = {}, markers = {}, tinted = {}, sig_t = -100,
   rec_mode = 1, mode_flash_until = 0, solo_tap_t = -100,
   slots = {}, types = {}, manual = {}, tcache = {},
   last_rebuild = -100, err_count = 0, gui_open = true,

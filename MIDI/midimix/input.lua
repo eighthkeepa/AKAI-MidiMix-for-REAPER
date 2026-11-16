@@ -292,7 +292,6 @@ function update_leds(now)
     local idx = math.floor((now - S.anim.t0) / CFG.startup_step_s) + 1
     if idx > #S.anim.seq then
       S.anim = nil
-      S.tint_full = true   -- the fill animation is over: a later reconnect keeps the tint
       S.led = {}  -- the normal state is sent again right below
       force = true
     else

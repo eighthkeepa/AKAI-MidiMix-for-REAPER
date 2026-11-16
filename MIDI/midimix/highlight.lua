@@ -102,35 +102,20 @@ end
 function restore_color(g)
   local t = S.tinted[g]
   S.tinted[g] = nil
-  if not valid(t.tr) then return end
+  if not t or not valid(t.tr) then return end
   if info(t.tr, "I_CUSTOMCOLOR") == t.set then set_info(t.tr, "I_CUSTOMCOLOR", t.orig) end  -- unless the user recoloured it meanwhile
   tag_set(t.tr, "midimix_origcolor", "")
   R.TrackList_AdjustWindows(false)
 end
 
--- Which tracks are tinted right now. While the start-up LED circle runs, the
--- bank fills strip by strip across the whole run time; afterwards (and when
--- animations are off or the device is away) the whole bank at once. A later
--- reconnect keeps the tint (S.tint_full): no second fill.
-function color_want(now)
+function update_colors(now)
   local want = {}
-  if CFG.highlight ~= "color" or not S.enabled then return want end
-  local p   -- fraction of the fill done, or nil = everything
-  if S.anim and not S.tint_full then
-    local total = math.max(#S.anim.seq * (CFG.startup_step_s or 0.07), 0.01)
-    p = clamp((now - (S.anim.t0 or now)) / total, 0, 1)
+  if CFG.highlight == "color" and S.enabled then
+    for i = 1, CFG.bank_size do
+      local tr = S.strips[i]
+      if tr then want[guid(tr)] = tr end
+    end
   end
-  local slots = 0
-  for k = 1, CFG.bank_size do if S.strips[k] then slots = slots + 1 end end
-  for i = 1, CFG.bank_size do
-    local tr = S.strips[i]
-    if tr and (p == nil or slots == 0 or p * slots >= i) then want[guid(tr)] = tr end
-  end
-  return want
-end
-
-function update_colors(now, forced)
-  local want = forced or color_want(now)
   for g in pairs(S.tinted) do if not want[g] then restore_color(g) end end
   local col, a = CFG.marker_color, clamp(CFG.highlight_tint, 0, 1)
   for g, tr in pairs(want) do

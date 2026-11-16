@@ -1,5 +1,5 @@
 -- @description AKAI MidiMix for REAPER
--- @version 0.27
+-- @version 0.26
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,7 +9,6 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
---   0.27: the color highlight is animated: on start the bank fills strip by strip during the LED circle, on exit the tint follows the blink phases (tinted while the LEDs are lit, original colours while they are dark)
 --   0.26: device scan every second, so the window notices an unplug within about 1 s; how fast REAPER itself notices the unplug can still vary by system
 --   0.25: the window notices an unplugged MidiMix within about 2 seconds (was 5)
 --   0.24: REAPER no longer freezes when the script exits: the exit blink now runs in the background; exit cleanup (bank highlight, LEDs, toolbar button) verified by tests
@@ -20,7 +19,7 @@
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  AKAI MidiMix for REAPER - version 0.27
+  AKAI MidiMix for REAPER - version 0.26
 
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
@@ -105,26 +104,10 @@ local function exit_tick(now)
   for i = 1, 8 do notes[#notes + 1] = m.mute[i]; notes[#notes + 1] = m.rec[i] end
   if not S.exit_t then S.exit_t = now end
   local step = math.floor((now - S.exit_t) / math.min(CFG.exit_blink_s, 0.25))
-  S.exit_step = step
   if step >= 4 then return true end
   local on = step % 2 == 0
   for _, n in ipairs(notes) do led_set(n, on, true) end
   return false
-end
-
--- While the exit blink runs, the color highlight follows its phases: the bank
--- is tinted while the LED rows are lit and in original colours while they are
--- dark. cleanup() restores everything for good afterwards.
-local function exit_colors(now)
-  if CFG.highlight ~= "color" or not S.enabled or S.exit_step == nil then return end
-  local want = {}
-  if S.exit_step % 2 == 0 then
-    for i = 1, CFG.bank_size do
-      local tr = S.strips[i]
-      if tr then want[guid(tr)] = tr end
-    end
-  end
-  update_colors(now, want)
 end
 
 -- Everything temporary is undone: bank highlight, LEDs, toolbar button state.
@@ -146,15 +129,9 @@ end
 local function loop()
   if S.quit then
     -- quitting: blink on defer ticks, then clean up and stop the defer chain
-    local now = R.time_precise()
     local done = true
-    pcall(function() done = exit_tick(now) end)
-    if done then
-      cleanup()
-    else
-      pcall(exit_colors, now)   -- the bank tint follows the blink phases
-      R.defer(loop)
-    end
+    pcall(function() done = exit_tick(R.time_precise()) end)
+    if done then cleanup() else R.defer(loop) end
     return
   end
   local ok, err = pcall(tick)
