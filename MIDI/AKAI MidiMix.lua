@@ -1,5 +1,5 @@
 -- @description AKAI MidiMix for REAPER
--- @version 0.24
+-- @version 0.25
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,6 +9,7 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
+--   0.25: the window notices an unplugged MidiMix within about 2 seconds (was 5)
 --   0.24: REAPER no longer freezes when the script exits: the exit blink now runs in the background; exit cleanup (bank highlight, LEDs, toolbar button) verified by tests
 --   0.23: softer, a bit brighter 0 dB line; Help tab and hover hints; second mixer look in the style of the Akai MPC 2.0; Russian window (Settings > Window); settings group "Window"
 --   0.22: renamed to "AKAI MidiMix" (file, window, ReaPack); master mute / solo / pan (hold Bank Right); Bank hold jumps on release; double tap Solo restores the exact solo state; restart hint on collapsed Settings groups
@@ -17,7 +18,7 @@
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  AKAI MidiMix for REAPER - version 0.24
+  AKAI MidiMix for REAPER - version 0.25
 
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
@@ -71,7 +72,7 @@ local _ENV = ENV
 local function tick()
   local now = R.time_precise()
   if not strips_valid() then rebuild(now) end  -- a track was deleted: rebuild the bank right away
-  if now - S.last_scan > (S.device_ok and 5 or 1) then scan_devices(now) end
+  if now - S.last_scan > (S.device_ok and 2 or 1) then scan_devices(now) end
   poll_midi(now)
 
   if S.sa_down and not S.sa_trig and now - S.sa_t >= CFG.hold_s then

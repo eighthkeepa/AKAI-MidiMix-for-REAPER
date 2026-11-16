@@ -1222,6 +1222,29 @@ test("окно: время удержания Bank в подсказке бер�
   check(found, "в Help по-русски: 1,5 с")
 end)
 
+test("устройство исчезло и вернулось: окно показывает NO DEVICE быстро", function()
+  local st = setup({ gui = true })
+  local function no_dev_count()
+    local n = 0
+    for _, t in ipairs(st.gui_texts or {}) do if t == "NO DEVICE" then n = n + 1 end end
+    return n
+  end
+  check(no_dev_count() == 0, "до отключения — ACTIVE")
+  st.in_names, st.out_names = { "Other" }, { "Other" }   -- выдернули USB
+  st.run(2.2)                                            -- скан при работающем: раз в 2 с
+  check(no_dev_count() > 0, "NO DEVICE в окне не позже 2 с после отключения")
+  local function act_count()
+    local n = 0
+    for _, t in ipairs(st.gui_texts or {}) do if t == "ACTIVE" then n = n + 1 end end
+    return n
+  end
+  local act_before = act_count()
+  st.in_names = { "Other", "MIDI Mix" }; st.out_names = { "Other", "MIDI Mix" }
+  st.run(1.2)                                            -- скан без устройства: раз в 1 с
+  check(act_count() > act_before, "после возврата устройство снова найдено (ACTIVE)")
+  no_errors(st)
+end)
+
 test("значения из midimix_config.lua: тайминги ограничены", function()
   local st = setup({ cfg = "return { burst_window = 0, hold_s = 0, exit_blink_s = 5 }" })
   st.run(0.3)
