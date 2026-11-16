@@ -1,5 +1,5 @@
 -- @description AKAI MidiMix for REAPER
--- @version 0.23
+-- @version 0.24
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,6 +9,7 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
+--   0.24: REAPER no longer freezes when the script exits: the exit blink now runs in the background; exit cleanup (bank highlight, LEDs, toolbar button) verified by tests
 --   0.23: softer, a bit brighter 0 dB line; Help tab and hover hints; second mixer look in the style of the Akai MPC 2.0; Russian window (Settings > Window); settings group "Window"
 --   0.22: renamed to "AKAI MidiMix" (file, window, ReaPack); master mute / solo / pan (hold Bank Right); Bank hold jumps on release; double tap Solo restores the exact solo state; restart hint on collapsed Settings groups
 --   0.21: width knob only works on tracks in stereo pan mode; the script no longer switches pan mode on its own (opt-in setting); window title in Akai Red; window never docks; Settings tab uses collapsible groups
@@ -16,7 +17,7 @@
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  AKAI MidiMix for REAPER - version 0.23
+  AKAI MidiMix for REAPER - version 0.24
 
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
@@ -93,34 +94,27 @@ local function tick()
   update_leds(now)
 end
 
-local function wait(sec)
-  local t0 = R.time_precise()
-  local t, n = t0 + sec, 0
-  while R.time_precise() < t do
-    n = n + 1
-    if n == 20000 and R.time_precise() == t0 then break end  -- clock does not move (tests)
-  end
-end
-
-local function exit_blink()
-  if not CFG.exit_blink or S.out_idx == nil or not S.device_ok then return end
+-- Exit blink, deferred: the Mute and Rec rows blink twice across normal tick
+-- callbacks, so REAPER never blocks. Returns true when the blink is over.
+local function exit_tick(now)
+  if not CFG.exit_blink or S.out_idx == nil or not S.device_ok then return true end
   local m, notes = CFG.map, {}
   for i = 1, 8 do notes[#notes + 1] = m.mute[i]; notes[#notes + 1] = m.rec[i] end
-  local phase = math.min(CFG.exit_blink_s, 0.25)   -- REAPER waits here, so keep it short
-  for _ = 1, 2 do
-    for _, n in ipairs(notes) do led_set(n, true, true) end
-    wait(phase)
-    for _, n in ipairs(notes) do led_set(n, false, true) end
-    wait(phase)
-  end
+  if not S.exit_t then S.exit_t = now end
+  local step = math.floor((now - S.exit_t) / math.min(CFG.exit_blink_s, 0.25))
+  if step >= 4 then return true end
+  local on = step % 2 == 0
+  for _, n in ipairs(notes) do led_set(n, on, true) end
+  return false
 end
 
+-- Everything temporary is undone: bank highlight, LEDs, toolbar button state.
+-- Safe to run twice (atexit runs it again after the deferred quit finishes).
 local function cleanup()
   S.enabled = false
   pcall(update_markers, R.time_precise())
   pcall(update_colors, R.time_precise())
   pcall(update_spacers)
-  pcall(exit_blink)
   pcall(function()
     for _, note in ipairs(led_notes) do led_set(note, false, true) end
   end)
@@ -131,7 +125,13 @@ local function cleanup()
 end
 
 local function loop()
-  if S.quit then return end  -- atexit cleans everything up
+  if S.quit then
+    -- quitting: blink on defer ticks, then clean up and stop the defer chain
+    local done = true
+    pcall(function() done = exit_tick(R.time_precise()) end)
+    if done then cleanup() else R.defer(loop) end
+    return
+  end
   local ok, err = pcall(tick)
   if not ok then report_error("logic", err) end
   local ok2, err2 = pcall(draw_gui)

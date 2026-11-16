@@ -496,16 +496,34 @@ test("старт: диоды идут по кругу mute 1..8, rec 8..1", func
   for i = 1, 16 do check(order[i] == want[i], "шаг круга " .. i) end
 end)
 
-test("выход: mute и rec дважды мигают", function()
-  local st = setup()
+test("выход: mute и rec дважды мигают, без блокировки REAPER", function()
+  local st = setup({ gui = true })
   local from = #st.out
-  st.exit()
-  local ons = 0
+  st.gui_click = "Close script"   -- закрытие из окна: мигание идёт на defer-тиках
+  st.run(1.2)
+  -- led_set шлёт значение на каждом тике фазы, поэтому считаем фронты 0 -> 127
+  local ons, prev = 0, 0
   for i = from + 1, #st.out do
-    if st.out[i][3] == 127 and st.out[i][2] == MUTE[1] then ons = ons + 1 end
+    if st.out[i][2] == MUTE[1] then
+      local v = st.out[i][3]
+      if v == 127 and prev ~= 127 then ons = ons + 1 end
+      prev = v
+    end
   end
-  check(ons == 2, "mute 1 зажёгся дважды")
+  check(ons == 2, "mute 1 мигнул дважды (два фронта)")
   check(st.led(MUTE[1]) == 0 and st.led(REC[8]) == 0 and st.led(BL) == 0, "в конце всё погашено")
+  check(st.toggles[1234] == 0, "кнопка панели выключена")
+  st.exit()                     -- atexit после обычного выхода: повторная уборка без ошибок
+  no_errors(st)
+end)
+
+test("выход без устройства: без мигания, сразу уборка", function()
+  local st = setup({ gui = true, in_names = { "Other" }, out_names = { "Other" } })
+  st.gui_click = "Close script"
+  st.run(0.2)
+  check(st.toggles[1234] == 0, "кнопка панели выключена сразу")
+  check((st.led(BL) or 0) == 0 and (st.led(REC[1]) or 0) == 0, "диоды не мигают")
+  no_errors(st)
 end)
 
 test("Send All при зажатом Rec N: посыл только этого трека", function()
@@ -1208,8 +1226,139 @@ test("значения из midimix_config.lua: тайминги огранич�
   local st = setup({ cfg = "return { burst_window = 0, hold_s = 0, exit_blink_s = 5 }" })
   st.run(0.3)
   no_errors(st)
-  st.exit()   -- мигание на выходе не должно висеть секундами
+  st.exit()   -- уборка на выходе не должна висеть секундами
   check(true, "выход прошёл")
+end)
+
+-- «пачка» Send All: устройство присылает положения всех ручек и фейдеров (25 CC)
+local function send_dump(st)
+  for i = 1, 8 do
+    st.cc(FADER[i], 50); st.cc(TOP[i], 30); st.cc(MID[i], 30); st.cc(BOT[i], 30)
+  end
+  st.cc(62, 100)
+end
+
+test("Send All: пачка CC не двигает громкость, панораму, ширину и посылы", function()
+  local st = setup({ tracks = 12, before = function(s)
+    s.add_send(s.tracks[2], s.tracks[8], 0.5)
+  end })
+  local send_before = st.tracks[2].sends[1].D_VOL
+  send_dump(st); st.run(0.2)
+  check(near(st.tracks[1].D_VOL, 1), "фейдер не применён")
+  check(near(st.tracks[1].D_PAN, 0), "панорама не применена")
+  check(near(st.tracks[1].D_WIDTH, 1), "ширина не применена")
+  check(near(st.tracks[2].sends[1].D_VOL, send_before), "уровень посыла не применён")
+  check(near(st.master.D_VOL, 1), "мастер-фейдер не применён")
+end)
+
+test("Send All: одиночное и двойное нажатия срабатывают по одному разу", function()
+  local st = setup()
+  local function bank_hits()
+    local n = 0
+    for _, c in ipairs(st.commands) do if c == 40044 then n = n + 1 end end
+    return n
+  end
+  send_dump(st); st.run(0.7)          -- одиночное: режим «инструмент» ровно один раз
+  st.note_on(BL); st.note_on(BR); st.run(0.06)
+  st.note_off(BL); st.note_off(BR); st.run(0.06)
+  check(bank_hits() == 1, "обе Bank в инструменте = play/stop, режим переключён один раз")
+  send_dump(st); st.run(0.2); send_dump(st); st.run(0.2)   -- двойное: пауза
+  check(st.led(BL) == 127 and st.led(BR) == 127, "двойное нажатие включило паузу")
+  st.note_on(BL); st.note_on(BR); st.run(0.06)             -- на паузе кнопки мертвы
+  st.note_off(BL); st.note_off(BR); st.run(0.06)
+  check(bank_hits() == 1, "на паузе комбинации не работают")
+  send_dump(st); st.run(0.2); send_dump(st); st.run(0.2)   -- двойное снова: продолжить
+  check(st.led(BL) == 0 and st.led(BR) == 0, "пауза снята")
+  st.note_on(BL); st.note_on(BR); st.run(0.06)
+  st.note_off(BL); st.note_off(BR); st.run(0.06)
+  check(bank_hits() == 2, "после паузы режим «инструмент» сохранился, play/stop снова работает")
+  no_errors(st)
+end)
+
+test("после смены банка фейдер не двигает новый трек без подхвата", function()
+  local st = setup({ tracks = 12 })
+  local zero = math.floor(step_for_gain(1))
+  st.cc(FADER[1], zero); st.run(0.1)
+  st.cc(FADER[1], zero - 10); st.run(0.1)
+  check(st.tracks[1].D_VOL < 1, "трек 1 управлялся")
+  press(st, BR)
+  check(near(st.tracks[9].D_VOL, 1), "полоса переехала на трек 9")
+  st.cc(FADER[1], zero - 10); st.run(0.1)
+  check(near(st.tracks[9].D_VOL, 1), "прежнее положение фейдера к новому треку не применяется")
+  st.cc(FADER[1], zero + 3); st.run(0.1)
+  check(st.tracks[9].D_VOL ~= 1, "подхват по пересечению значения работает")
+  no_errors(st)
+end)
+
+test("остановка посреди мигания выхода: уборка полная и повторная безопасна", function()
+  local st = setup({ gui = true, tracks = 12 })
+  st.gui_click = "Close script"
+  st.run(0.12)                     -- ~4 тика: первая (включённая) фаза мигания
+  check(st.led(MUTE[1]) == 127, "мигание началось")
+  st.terminate()                   -- Actions: defer-цепочка убита, atexit выполнен
+  check(st.led(MUTE[1]) == 0 and st.led(REC[8]) == 0 and st.led(BL) == 0, "диоды погашены")
+  check(st.tracks[1].I_SPACER == 0 and st.tracks[9].I_SPACER == 0, "пробелы убраны")
+  check(st.toggles[1234] == 0, "кнопка панели отжалась")
+  st.run(0.3)                      -- defer-ов больше нет: ничего не происходит
+  check(st.led(MUTE[1]) == 0, "после остановки диоды не возвращаются")
+  st.exit()                        -- повторный cleanup безопасен
+  check(st.led(MUTE[1]) == 0 and st.toggles[1234] == 0, "повторная уборка ничего не ломает")
+  no_errors(st)
+end)
+
+test("остановка посреди мигания: режим color, цвета возвращаются", function()
+  local st = setup({ gui = true, cfg = "return { highlight = 'color' }" })
+  st.run(0.5)                      -- треки банка подкрашены
+  local tinted = st.tracks[1].I_CUSTOMCOLOR
+  check(tinted ~= nil and tinted ~= 0, "подкраска стоит")
+  st.gui_click = "Close script"
+  st.run(0.12)
+  st.terminate()
+  check((st.tracks[1].I_CUSTOMCOLOR or 0) == 0, "исходный цвет (был пустой) вернулся")
+  st.exit()
+  no_errors(st)
+end)
+
+test("Send All: пачка CC частями между тиками не двигает параметры", function()
+  local st = setup({ tracks = 12, before = function(s)
+    s.tracks[1].I_PANMODE = 5      -- чтобы ширина была активна
+    s.add_send(s.tracks[2], s.tracks[8], 0.5)
+  end })
+  -- пачка частями: один ряд ручек (или фейдеры) на defer-тик, всего ~0.12 с < burst_window
+  for i = 1, 8 do st.cc(FADER[i], 50) end; st.run(0.03)
+  for i = 1, 8 do st.cc(TOP[i], 30) end; st.run(0.03)
+  for i = 1, 8 do st.cc(MID[i], 30) end; st.run(0.03)
+  for i = 1, 8 do st.cc(BOT[i], 30) end; st.cc(62, 100); st.run(0.03)
+  check(near(st.tracks[1].D_VOL, 1), "громкость не изменилась")
+  check(near(st.tracks[1].D_PAN, 0), "панорама не изменилась")
+  check(near(st.tracks[1].D_WIDTH, 1), "ширина не изменилась")
+  check(near(st.tracks[2].sends[1].D_VOL, 0.5), "посыл не изменился")
+  check(near(st.master.D_VOL, 1), "мастер не изменился")
+  st.run(0.6)                      -- одиночное нажатие: одно срабатывание
+  st.note_on(BL); st.note_on(BR); st.run(0.06)
+  st.note_off(BL); st.note_off(BR); st.run(0.06)
+  local hits = 0
+  for _, c in ipairs(st.commands) do if c == 40044 then hits = hits + 1 end end
+  check(hits == 1, "Send All сработал ровно один раз (режим «инструмент»)")
+  no_errors(st)
+end)
+
+test("смена вкладки проекта: привязки ручек перечитываются", function()
+  local st = setup({ tracks = 3, before = function(s)
+    s.tracks[1].fxlist = { { guid = "{FX9}", name = "Plug", params = { { name = "p1", val = 0.2 } } } }
+    s.projext_other["MidiMixLua/bind_bot1"] = s.tracks[1].guid .. "|{FX9}|0"
+  end })
+  send_dump(st); st.run(0.7)          -- одиночный Send All: режим «инструмент»
+  st.cc(BOT[1], 80); st.run(0.1)      -- в исходном проекте привязки нет: ручка молчит
+  check(near(st.tracks[1].fxlist[1].params[1].val, 0.2), "чужая привязка не применяется")
+  st.project = "proj2"; st.run(1.1)   -- вкладка проекта сменилась: привязки перечитаны
+  st.cc(BOT[1], 28); st.run(0.1)      -- 28/127 близко к 0.2: подхват
+  check(st.tracks[1].fxlist[1].params[1].val > 0.2, "привязка другого проекта заработала")
+  st.project = "proj"; st.run(1.1)
+  local v = st.tracks[1].fxlist[1].params[1].val
+  st.cc(BOT[1], 80); st.run(0.1)
+  check(near(st.tracks[1].fxlist[1].params[1].val, v), "обратно: привязка исходного проекта по-прежнему пуста")
+  no_errors(st)
 end)
 
 print(string.format("\nИтого: %d проверок прошло, %d провалено", passes, fails))

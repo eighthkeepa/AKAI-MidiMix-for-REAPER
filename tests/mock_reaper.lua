@@ -13,7 +13,7 @@ function M.new(opts)
     dev_in = opts.dev_in or 1,
     script_path = opts.script_path or "/nonexistent/AKAI MidiMix.lua",
     spacer_works = opts.spacer_works ~= false,
-    nextguid = 0, projext = {}, commands = {},
+    nextguid = 0, projext = {}, projext_other = {}, project = "proj", commands = {},
   }
   local R = {}
   st.R = R
@@ -57,6 +57,11 @@ function M.new(opts)
     for _ = 1, n do st.tick(dt) end
   end
   function st.exit() for _, f in ipairs(st.atexits) do f() end end
+  -- REAPER убил скрипт (Actions): defer-цепочка умирает, atexit выполняется
+  function st.terminate()
+    st.defers = {}
+    for _, f in ipairs(st.atexits) do f() end
+  end
 
   -- LED: последнее состояние по нотам
   function st.led(note)
@@ -140,9 +145,17 @@ function M.new(opts)
     if not st.touched then return false end
     return true, st.touched[1], st.touched[2], st.touched[3]
   end
-  R.EnumProjects = function() return "proj" end
-  R.GetProjExtState = function(_, sec, key) local v = st.projext[sec .. "/" .. key]; return v and #v or 0, v or "" end
-  R.SetProjExtState = function(_, sec, key, v) st.projext[sec .. "/" .. key] = (v ~= "" and v or nil); return 0 end
+  R.EnumProjects = function() return st.project end
+  -- ExtState привязок живёт в проекте: "proj" держит st.projext (как в старых тестах),
+  -- любой другой st.project — st.projext_other
+  R.GetProjExtState = function(_, sec, key)
+    local src = st.project == "proj" and st.projext or st.projext_other
+    local v = src[sec .. "/" .. key]; return v and #v or 0, v or ""
+  end
+  R.SetProjExtState = function(_, sec, key, v)
+    local src = st.project == "proj" and st.projext or st.projext_other
+    src[sec .. "/" .. key] = (v ~= "" and v or nil); return 0
+  end
   R.SetOnlyTrackSelected = function(t) for _, x in ipairs(st.tracks) do x.I_SELECTED = 0 end; t.I_SELECTED = 1; st.selected = t end
   R.Main_OnCommand = function(cmd) st.commands[#st.commands + 1] = cmd end
   R.CSurf_GoStart = function() st.commands[#st.commands + 1] = "gostart" end
