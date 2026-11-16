@@ -1,5 +1,5 @@
 -- @description AKAI MidiMix for REAPER
--- @version 0.26
+-- @version 0.28
 -- @author The Eighth
 -- @link GitHub https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER
 -- @about
@@ -9,6 +9,7 @@
 -- @provides
 --   [nomain] midimix/*.lua
 -- @changelog
+--   0.28: removed the animated color highlight; the color tint is instant again (as in 0.26)
 --   0.26: device scan every second, so the window notices an unplug within about 1 s; how fast REAPER itself notices the unplug can still vary by system
 --   0.25: the window notices an unplugged MidiMix within about 2 seconds (was 5)
 --   0.24: REAPER no longer freezes when the script exits: the exit blink now runs in the background; exit cleanup (bank highlight, LEDs, toolbar button) verified by tests
@@ -19,7 +20,7 @@
 --   0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/
 
 --[[
-  AKAI MidiMix for REAPER - version 0.26
+  AKAI MidiMix for REAPER - version 0.28
 
   Not verified on every setup. If something is off, run AKAI MidiMix probe.lua first:
   it shows which notes and CCs your MidiMix actually sends.
