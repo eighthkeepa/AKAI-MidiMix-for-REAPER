@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="MidiMix" commit="5e109bd6ab3c9df9eac78045d74ada9393755e2e">
+<index version="1" name="MidiMix" commit="63b918f1663a5d789c45e6993de3f62b91ec3033">
   <category name="MIDI">
     <reapack name="AKAI MidiMix probe.lua" type="script" desc="AKAI MidiMix probe">
       <metadata>
@@ -58,6 +58,23 @@
         <source file="midimix/lang.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5e109bd6ab3c9df9eac78045d74ada9393755e2e/MIDI/midimix/lang.lua</source>
         <source file="midimix/settings.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5e109bd6ab3c9df9eac78045d74ada9393755e2e/MIDI/midimix/settings.lua</source>
         <source file="midimix/tracks.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/5e109bd6ab3c9df9eac78045d74ada9393755e2e/MIDI/midimix/tracks.lua</source>
+      </version>
+      <version name="0.24" author="The Eighth" time="2026-11-16T18:43:49Z">
+        <changelog><![CDATA[0.24: REAPER no longer freezes when the script exits: the exit blink now runs in the background; exit cleanup (bank highlight, LEDs, toolbar button) verified by tests
+0.23: softer, a bit brighter 0 dB line; Help tab and hover hints; second mixer look in the style of the Akai MPC 2.0; Russian window (Settings > Window); settings group "Window"
+0.22: renamed to "AKAI MidiMix" (file, window, ReaPack); master mute / solo / pan (hold Bank Right); Bank hold jumps on release; double tap Solo restores the exact solo state; restart hint on collapsed Settings groups
+0.21: width knob only works on tracks in stereo pan mode; the script no longer switches pan mode on its own (opt-in setting); window title in Akai Red; window never docks; Settings tab uses collapsible groups
+0.20: window shows the master fader; fader scale follows the fader top; meters follow pan; fader top is +12 dB by default
+0.19: mixer window redesigned in the style of the Akai MPC mixer, level meters, strip frames, modules in midimix/]]></changelog>
+        <source main="main">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/AKAI%20MidiMix.lua</source>
+        <source file="midimix/device.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/device.lua</source>
+        <source file="midimix/gui.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/gui.lua</source>
+        <source file="midimix/highlight.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/highlight.lua</source>
+        <source file="midimix/input.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/input.lua</source>
+        <source file="midimix/instrument.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/instrument.lua</source>
+        <source file="midimix/lang.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/lang.lua</source>
+        <source file="midimix/settings.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/settings.lua</source>
+        <source file="midimix/tracks.lua">https://github.com/eighthkeepa/AKAI-MidiMix-for-REAPER/raw/63b918f1663a5d789c45e6993de3f62b91ec3033/MIDI/midimix/tracks.lua</source>
       </version>
     </reapack>
   </category>
