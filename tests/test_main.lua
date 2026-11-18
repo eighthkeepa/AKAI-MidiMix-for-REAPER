@@ -1245,6 +1245,96 @@ test("устройство исчезло и вернулось: окно пок
   no_errors(st)
 end)
 
+test("fill_anim: по умолчанию выключена — заливка мгновенная даже во время круга", function()
+  local st = setup({ tracks = 12, cfg = "return { highlight = 'color', startup_step_s = 0.5 }" })
+  -- setup прогнало 1.4 с из круга 8 с; без анимации залит уже весь банк
+  for i = 1, 8 do
+    check(st.tracks[i].I_CUSTOMCOLOR ~= 0, "слот " .. i .. " залит сразу")
+  end
+  check((st.tracks[9].I_CUSTOMCOLOR or 0) == 0, "вне банка заливки нет")
+  no_errors(st)
+end)
+
+test("fill_anim: включена из midimix_config.lua — заливка по слотам", function()
+  local st = setup({ tracks = 12, cfg = "return { highlight = 'color', fill_anim = true, startup_step_s = 0.5 }" })
+  -- 1.4 с из 8: p*slots = 1.4 — залит только первый слот
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "первый слот залит")
+  check((st.tracks[2].I_CUSTOMCOLOR or 0) == 0, "второй слот ещё не залит")
+  st.run(8)
+  for i = 1, 8 do
+    check(st.tracks[i].I_CUSTOMCOLOR ~= 0, "слот " .. i .. " залит к концу круга")
+  end
+  no_errors(st)
+end)
+
+test("fill_anim: настройка сохранена в ExtState и читается при следующем запуске", function()
+  local st = setup({ tracks = 12, before = function(s)
+    s.ext["MidiMixLua_settings/fill_anim"] = "true"          -- включили из окна в прошлом запуске
+  end, cfg = "return { highlight = 'color', startup_step_s = 0.5 }" })
+  -- сохранённая true перекрывает умолчание false: заливка анимированная
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "первый слот залит")
+  check((st.tracks[2].I_CUSTOMCOLOR or 0) == 0, "второй слот ждёт своей доли круга")
+end)
+
+test("fill_anim: на выходе заливка мигает в такт диодам", function()
+  local st = setup({ gui = true, cfg = "return { highlight = 'color', fill_anim = true, exit_blink_s = 0.2 }" })
+  st.run(0.5)
+  for i = 1, 8 do check(st.tracks[i].I_CUSTOMCOLOR ~= 0, "слот " .. i .. " залит до выхода") end
+  st.gui_click = "Close script"
+  st.run(0.05)   -- фаза 0: диоды горят, банк залит
+  check(st.led(MUTE[1]) == 127, "фаза «горят»")
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "в фазе «горят» банк залит")
+  st.run(0.2)    -- фаза 1: погашены — исходные цвета
+  check(st.led(MUTE[1]) == 0, "фаза «погашены»")
+  check((st.tracks[1].I_CUSTOMCOLOR or 0) == 0, "в фазе «погашены» исходный цвет")
+  st.run(0.2)    -- фаза 2: снова горят — снова залит
+  check(st.led(MUTE[1]) == 127, "снова фаза «горят»")
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "в снова-«горят» банк залит")
+  st.run(1.0)    -- конец мигания: уборка
+  check((st.tracks[1].I_CUSTOMCOLOR or 0) == 0, "после выхода цвета восстановлены")
+  check(st.toggles[1234] == 0, "кнопка панели отжалась")
+  no_errors(st)
+end)
+
+test("fill_anim: без exit_blink цвета снимаются сразу", function()
+  local st = setup({ gui = true, cfg = "return { highlight = 'color', fill_anim = true, exit_blink = false }" })
+  st.run(0.3)
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "залит до выхода")
+  st.gui_click = "Close script"
+  st.run(0.1)
+  check((st.tracks[1].I_CUSTOMCOLOR or 0) == 0, "цвета сняты сразу, без фаз")
+  no_errors(st)
+end)
+
+test("fill_anim: остановка посреди стартовой заливки возвращает цвета", function()
+  local st = setup({ gui = true, cfg = "return { highlight = 'color', fill_anim = true, startup_step_s = 0.5 }" })
+  check(st.tracks[1].I_CUSTOMCOLOR ~= 0, "частичная заливка есть")
+  check((st.tracks[8].I_CUSTOMCOLOR or 0) == 0, "последний слот ещё чистый")
+  st.terminate()   -- Actions: defer-цепочка убита, atexit выполнен сразу
+  check((st.tracks[1].I_CUSTOMCOLOR or 0) == 0, "залитый слот восстановлен")
+  check((st.tracks[8].I_CUSTOMCOLOR or 0) == 0, "остальные чистые")
+  st.exit()        -- повторная уборка безопасна
+  no_errors(st)
+end)
+
+test("fill_anim: переподключение USB сохраняет заливку, смена банка возвращает цвета", function()
+  local st = setup({ tracks = 12, cfg = "return { highlight = 'color', fill_anim = true }" })
+  st.run(0.3)      -- setup прогнало 1.4 с > круга 1.12 с: весь банк залит
+  st.in_names, st.out_names = { "Other" }, { "Other" }
+  st.run(1.3)      -- выдернули USB
+  st.in_names = { "Other", "MIDI Mix" }; st.out_names = { "Other", "MIDI Mix" }
+  st.run(3.2)      -- вернули: скан нашёл, круг пошёл заново
+  local tinted = 0
+  for i = 1, 8 do if (st.tracks[i].I_CUSTOMCOLOR or 0) ~= 0 then tinted = tinted + 1 end end
+  check(tinted == 8, "заливка пережила переподключение без повторной анимации")
+  press(st, BR)    -- банк 2: дорожки 9..12
+  for i = 1, 8 do
+    check((st.tracks[i].I_CUSTOMCOLOR or 0) == 0, "дорожка " .. i .. ": цвет возвращён при смене банка")
+  end
+  check(st.tracks[9].I_CUSTOMCOLOR ~= 0, "новый банк залит")
+  no_errors(st)
+end)
+
 test("значения из midimix_config.lua: тайминги ограничены", function()
   local st = setup({ cfg = "return { burst_window = 0, hold_s = 0, exit_blink_s = 5 }" })
   st.run(0.3)

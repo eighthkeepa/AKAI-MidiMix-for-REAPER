@@ -28,6 +28,7 @@ CFG = {
                                --   "color"   = the bank's tracks are tinted red (original colours are restored)
                                --   "none"
   highlight_tint = 0.45,       -- "color" mode: how much red is mixed in, 0..1
+  fill_anim = false,           -- "color" mode: tint strip by strip during the start-up LED circle and blink with the exit phases
   marker_color = {0xBC, 0x01, 0x2E},  -- Akai Red
   rec_modes = true,            -- double tap Solo cycles what the Rec row does: arm -> send mute -> FX bypass
   follow_mixer = false,        -- true: scrolling the mixer by hand moves the bank to the first visible track
@@ -173,6 +174,8 @@ SCHEMA = {
     options = { "spacers", "markers", "color", "none" },
     names = { "Spacers", "Two red MidiMix separator tracks", "Tint the tracks red", "Nothing" } },
   { key = "highlight_tint", label = "Tint strength", kind = "float", min = 0.1, max = 0.9, live = true },
+  { key = "fill_anim", label = "Fill animation", kind = "bool", live = true,
+    tip = "Color mode only: tint the bank strip by strip during the start-up LED circle and make it follow the exit blink." },
   { key = "rec_modes", label = "Double tap Solo switches the Rec row mode", kind = "bool", live = true },
   { key = "follow_mixer", label = "Bank follows mixer scroll", kind = "bool", live = true },
   { key = "scroll_mixer", label = "Scroll mixer to the bank", kind = "bool", live = true },
@@ -237,7 +240,7 @@ S = {
   led = {}, led_t = -100,
   sp_owned = {}, sp_dirty = true, sp_checked = false,
   mode = "mixer", binds = {}, bind_res = {}, learn_key = nil, learn_mode = false, mode_flash = nil, binds_proj = nil,
-  meters = {}, markers = {}, tinted = {}, sig_t = -100,
+  meters = {}, markers = {}, tinted = {}, tint_full = false, sig_t = -100,
   rec_mode = 1, mode_flash_until = 0, solo_tap_t = -100,
   slots = {}, types = {}, manual = {}, tcache = {},
   last_rebuild = -100, err_count = 0, gui_open = true,

@@ -108,14 +108,30 @@ function restore_color(g)
   R.TrackList_AdjustWindows(false)
 end
 
-function update_colors(now)
+-- Which tracks are tinted right now. With "Fill animation" on and the
+-- start-up LED circle still running, the bank fills strip by strip across the
+-- whole run time; afterwards (and when the animation is off, disabled or the
+-- device is away) the whole bank at once. A later reconnect keeps the tint
+-- (S.tint_full): no second fill.
+function color_want(now)
   local want = {}
-  if CFG.highlight == "color" and S.enabled then
-    for i = 1, CFG.bank_size do
-      local tr = S.strips[i]
-      if tr then want[guid(tr)] = tr end
-    end
+  if CFG.highlight ~= "color" or not S.enabled then return want end
+  local p   -- fraction of the fill done, or nil = everything
+  if CFG.fill_anim and S.anim and not S.tint_full then
+    local total = math.max(#S.anim.seq * (CFG.startup_step_s or 0.07), 0.01)
+    p = clamp((now - (S.anim.t0 or now)) / total, 0, 1)
   end
+  local slots = 0
+  for k = 1, CFG.bank_size do if S.strips[k] then slots = slots + 1 end end
+  for i = 1, CFG.bank_size do
+    local tr = S.strips[i]
+    if tr and (p == nil or slots == 0 or p * slots >= i) then want[guid(tr)] = tr end
+  end
+  return want
+end
+
+function update_colors(now, forced)
+  local want = forced or color_want(now)
   for g in pairs(S.tinted) do if not want[g] then restore_color(g) end end
   local col, a = CFG.marker_color, clamp(CFG.highlight_tint, 0, 1)
   for g, tr in pairs(want) do

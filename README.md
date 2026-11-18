@@ -54,7 +54,7 @@ In Instrument mode, all 24 knobs control plugin parameters. Select a cell in the
 The script detects audio, instrument, bus, VCA, folder and separator tracks. Change a track's type with one click. Separator tracks are skipped by the controller.
 
 **Mark the current bank**
-In REAPER, mark the tracks in the current bank with spacers, two red marker tracks or a red tint. The script removes the markers it added when it stops.
+In REAPER, mark the tracks in the current bank with spacers, two red marker tracks or a red tint. The script removes the markers it added when it stops. Optionally, the tint can be animated: the bank fills strip by strip during the start-up LED circle and blinks in time with the exit blink (“Fill animation” in Settings, off by default).
 
 **Controller LEDs**
 Mute and Rec LEDs show track states in REAPER. Bank LEDs show the current bank and indicate when the script is paused. You can turn off the start-up and exit animations.

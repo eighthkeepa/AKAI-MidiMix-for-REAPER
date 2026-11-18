@@ -45,7 +45,10 @@ RU = {
   ["Tracks in a bank"] = "Дорожек в банке", ["Skip separator tracks (no dead slot)"] = "Пропускать разделители (без пустой полосы)",
   ["Show the bank with"] = "Показывать банк",
   ["Spacers"] = "Пробелами", ["Two red MidiMix separator tracks"] = "Двумя красными дорожками MidiMix", ["Tint the tracks red"] = "Подкраской дорожек", ["Nothing"] = "Никак",
-  ["Tint strength"] = "Сила подкраски", ["Double tap Solo switches the Rec row mode"] = "Двойной Solo переключает режим ряда Rec",
+  ["Tint strength"] = "Сила подкраски", ["Fill animation"] = "Анимация заливки",
+  ["Color mode only: tint the bank strip by strip during the start-up LED circle and make it follow the exit blink."] =
+    "Только режим color: заливай банк по полосе за время стартового круга диодов и мигай в такт на выходе.",
+  ["Double tap Solo switches the Rec row mode"] = "Двойной Solo переключает режим ряда Rec",
   ["Bank follows mixer scroll"] = "Банк следует за прокруткой микшера", ["Scroll mixer to the bank"] = "Прокручивать микшер к банку",
   ["Meters show level after the fader"] = "Метры после фейдера", ["Meters follow pan (left/right levels)"] = "Метры следуют за pan (левый/правый)",
   ["LED circle on start"] = "Круг диодов при старте", ["Double blink on exit"] = "Двойное мигание при выходе",
